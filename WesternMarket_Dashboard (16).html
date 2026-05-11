@@ -1,0 +1,2016 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Western Market DC — KPI Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --black:#0d0d0d; --gold:#ab9868; --gold2:#c8b48a; --gold-bg:#f5ede0;
+  --white:#f5f2ed; --gray:#2a2a2a; --gray2:#1a1a1a; --gray3:#3a3a3a;
+  --border:#2e2e2e; --muted:#777; --green:#7ab648; --red:#c0392b; --blue:#5b6771;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--black);color:var(--white);font-family:'Open Sans',sans-serif;min-height:100%;font-size:13px}
+
+/* ── Top nav ── */
+.topbar{background:var(--gray2);border-bottom:1px solid var(--gold);display:flex;align-items:center;justify-content:space-between;padding:0 24px;height:56px;position:sticky;top:0;z-index:100}
+.logo{display:flex;align-items:center;gap:12px}
+
+.brand{font-family:'Oswald',sans-serif;font-size:15px;font-weight:600;letter-spacing:.07em;color:var(--white);text-transform:uppercase}
+.brand-sub{font-size:9px;color:var(--gold);letter-spacing:.1em;text-transform:uppercase;margin-top:1px}
+.nav-links{display:flex;gap:2px}
+.nav-btn{font-family:'Oswald',sans-serif;font-size:11px;letter-spacing:.07em;text-transform:uppercase;padding:8px 14px;border:none;background:transparent;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;white-space:nowrap}
+.nav-btn.active{color:var(--gold);border-bottom-color:var(--gold)}
+.nav-btn:hover:not(.active){color:var(--white)}
+.report-date{font-size:10px;color:var(--muted);letter-spacing:.06em;text-transform:uppercase}
+
+/* ── Panels ── */
+.panel{display:none;padding:20px 24px;animation:fadeIn .2s ease}
+.panel.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── Typography ── */
+.sec-label{font-family:'Oswald',sans-serif;font-size:11px;letter-spacing:.12em;color:var(--gold);text-transform:uppercase;margin-bottom:10px}
+.gold-div{height:1px;background:linear-gradient(90deg,var(--gold) 0%,transparent 80%);margin:16px 0;opacity:.35}
+
+/* ── Metric cards ── */
+.metrics{display:grid;gap:8px;margin-bottom:14px}
+.m4{grid-template-columns:repeat(4,1fr)}
+.m3{grid-template-columns:repeat(3,1fr)}
+.m2{grid-template-columns:repeat(2,1fr)}
+.metric{background:var(--gray2);border:0.5px solid var(--border);border-top:2px solid var(--gold);border-radius:3px;padding:12px 14px}
+.metric-lbl{font-size:10px;color:var(--muted);margin-bottom:4px;letter-spacing:.06em;text-transform:uppercase}
+.metric-val{font-family:'Oswald',sans-serif;font-size:21px;font-weight:500;line-height:1.1}
+.metric-delta{font-size:11px;margin-top:3px}
+.up{color:var(--green)}.down{color:var(--red)}.neu{color:var(--muted)}
+
+/* ── Cards ── */
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:14px}
+.grid32{display:grid;grid-template-columns:3fr 2fr;gap:10px;margin-bottom:14px}
+.card{background:var(--gray2);border:0.5px solid var(--border);border-radius:4px;padding:14px 16px}
+.card-title{font-size:10px;font-weight:600;color:var(--gold);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px}
+
+/* ── Bar rows ── */
+.bar-row{display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:.5px solid var(--border)}
+.bar-row:last-child{border-bottom:none}
+.bar-lbl{font-size:11px;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bar-track{width:80px;height:5px;background:var(--gray3);border-radius:10px;overflow:hidden;flex-shrink:0}
+.bar-fill{height:100%;border-radius:10px}
+.bar-val{font-size:11px;color:var(--muted);min-width:52px;text-align:right;flex-shrink:0}
+
+/* ── Tenant table ── */
+.t-table{width:100%;border-collapse:collapse;font-size:11px;margin-bottom:4px}
+.t-table th{font-size:9px;font-weight:600;color:var(--gold);text-transform:uppercase;letter-spacing:.06em;padding:5px 8px;border-bottom:.5px solid var(--border);text-align:left;background:var(--gray2)}
+.t-table th.r{text-align:right}
+.t-table td{padding:6px 8px;border-bottom:.5px solid var(--border);vertical-align:middle}
+.t-table td.r{text-align:right;font-variant-numeric:tabular-nums}
+.t-table tr:hover td{background:var(--gray3)}
+.t-total td{font-weight:600;background:var(--gray)!important;border-top:.5px solid var(--gold)}
+.badge{font-size:9px;padding:1px 6px;border-radius:2px;font-weight:600;letter-spacing:.03em;display:inline-block}
+.b-hit{background:rgba(122,182,72,.15);color:var(--green);border:.5px solid rgba(122,182,72,.3)}
+.b-close{background:rgba(171,152,104,.15);color:var(--gold);border:.5px solid rgba(171,152,104,.3)}
+.b-no{background:rgba(255,255,255,.05);color:var(--muted);border:.5px solid var(--border)}
+.b-vac{background:rgba(192,57,43,.12);color:#e07060;border:.5px solid rgba(192,57,43,.25)}
+.b-new{background:rgba(171,152,104,.1);color:var(--gold2);border:.5px solid rgba(171,152,104,.2)}
+.b-pop{background:rgba(255,255,255,.05);color:var(--muted);border:.5px solid var(--border)}
+
+/* ── Month nav ── */
+.month-nav{display:flex;gap:4px;margin-bottom:14px;flex-wrap:wrap;align-items:center}
+.m-btn{font-size:12px;font-weight:600;padding:5px 11px;border-radius:3px;border:.5px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;font-family:'Open Sans',sans-serif;transition:all .12s}
+.m-btn.active{background:var(--gold);color:var(--black);font-weight:700;border-color:var(--gold)}
+.m-btn:hover:not(.active){border-color:var(--gold);color:var(--gold)}
+
+/* ── MoM grid ── */
+.mom-grid{display:grid;grid-template-columns:repeat(12,1fr);gap:4px;margin-bottom:14px}
+.mom-cell{background:var(--gray2);border:.5px solid var(--border);border-radius:3px;padding:5px 3px;text-align:center;cursor:pointer}
+.mom-cell:hover{border-color:var(--gold)}
+.mom-mo{font-size:9px;color:var(--muted)}
+.mom-v{font-family:'Oswald',sans-serif;font-size:11px;font-weight:500}
+
+/* ── Spark ── */
+.spark{width:60px;height:18px;vertical-align:middle}
+
+/* ── Entry grid ── */
+.entry-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px}
+.entry-cell{background:var(--gray3);border-radius:3px;padding:8px 10px}
+.entry-nm{font-size:10px;color:var(--muted);margin-bottom:2px}
+.entry-v{font-family:'Oswald',sans-serif;font-size:15px}
+.entry-p{font-size:10px;color:var(--gold);margin-top:1px}
+
+/* ── Year grid (events) ── */
+.yr-grid{margin-bottom:14px}
+.mo-block{margin-bottom:10px}
+.mo-hdr{display:flex;align-items:center;gap:10px;margin-bottom:5px}
+.mo-name{font-family:'Oswald',sans-serif;font-size:11px;color:var(--white);letter-spacing:.08em;width:36px;flex-shrink:0}
+.mo-line{flex:1;height:.5px;background:var(--border)}
+.pill-wrap{display:flex;flex-wrap:wrap;gap:4px}
+.pill{font-size:10px;padding:3px 8px;border-radius:3px;display:inline-flex;align-items:center;gap:4px;cursor:default}
+.pill-wm{background:rgba(171,152,104,.18);color:var(--gold2);border:.5px solid rgba(171,152,104,.4)}
+.pill-city{background:rgba(91,103,113,.2);color:#9ab0be;border:.5px solid rgba(91,103,113,.4)}
+.pill-gw{background:rgba(122,182,72,.12);color:#8ec554;border:.5px solid rgba(122,182,72,.25)}
+.pill-brk{background:rgba(192,57,43,.1);color:#e07060;border:.5px solid rgba(192,57,43,.25)}
+.pdot{width:5px;height:5px;border-radius:50%;flex-shrink:0}
+
+/* ── GW table ── */
+.sem-block{background:var(--gray2);border:.5px solid var(--border);border-radius:4px;padding:12px 16px;margin-bottom:10px}
+.sem-nm{font-family:'Oswald',sans-serif;font-size:12px;color:var(--gold);margin-bottom:8px;letter-spacing:.06em}
+.sem-row{display:flex;align-items:center;gap:8px;padding:4px 0;border-bottom:.5px solid var(--border);font-size:11px}
+.sem-row:last-child{border-bottom:none}
+.sem-l{color:var(--muted);width:160px;flex-shrink:0}
+.sem-v{color:var(--white);font-weight:600}
+.sem-imp{font-size:10px;color:var(--muted);margin-left:auto;font-style:italic}
+
+/* ── Event list ── */
+.ev-row{display:flex;align-items:flex-start;gap:10px;padding:8px 0;border-bottom:.5px solid var(--border)}
+.ev-row:last-child{border-bottom:none}
+.ev-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;margin-top:3px}
+.ev-info{flex:1}
+.ev-name{font-size:12px;font-weight:600;margin-bottom:1px}
+.ev-date{font-size:11px;color:var(--muted)}
+.ev-note{font-size:10px;color:var(--muted);margin-top:1px;font-style:italic}
+.ev-type{font-size:9px;padding:2px 6px;border-radius:2px;font-weight:600;flex-shrink:0;margin-top:2px}
+.et-wm{background:rgba(171,152,104,.18);color:var(--gold);border:.5px solid rgba(171,152,104,.3)}
+.et-city{background:rgba(91,103,113,.2);color:#9ab0be;border:.5px solid rgba(91,103,113,.4)}
+
+/* ── Add event form ── */
+.add-form{background:var(--gray2);border:.5px solid var(--gold);border-radius:4px;padding:14px 16px;margin-bottom:14px}
+.form-row{display:grid;grid-template-columns:1fr 1fr 1fr 1fr auto;gap:8px;align-items:end}
+.form-grp{display:flex;flex-direction:column;gap:4px}
+.form-lbl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.form-inp,.form-sel{background:var(--gray3);border:.5px solid var(--border);border-radius:3px;color:var(--white);font-size:11px;padding:6px 8px;font-family:'Open Sans',sans-serif;outline:none;width:100%}
+.form-inp:focus,.form-sel:focus{border-color:var(--gold)}
+.add-btn{background:var(--gold);color:var(--black);font-family:'Oswald',sans-serif;font-size:12px;font-weight:600;letter-spacing:.06em;padding:7px 16px;border:none;border-radius:3px;cursor:pointer;white-space:nowrap}
+.add-btn:hover{background:var(--gold2)}
+.note-row{margin-top:8px}
+.del-btn{background:none;border:none;color:var(--muted);cursor:pointer;font-size:14px;padding:0 4px;margin-left:6px}
+.del-btn:hover{color:var(--red)}
+
+/* ── Tab sub-bar ── */
+.sub-tabs{display:flex;gap:2px;margin-bottom:14px;border-bottom:.5px solid var(--border)}
+.sub-tab{font-family:'Oswald',sans-serif;font-size:11px;letter-spacing:.07em;text-transform:uppercase;padding:7px 12px;cursor:pointer;color:var(--muted);border-bottom:2px solid transparent;transition:all .12s}
+.sub-tab.active{color:var(--gold);border-bottom-color:var(--gold)}
+.sub-tab:hover:not(.active){color:var(--white)}
+.sub-panel{display:none}.sub-panel.active{display:block}
+
+/* ── Tour table ── */
+.tour-table{width:100%;border-collapse:collapse;font-size:11px}
+.tour-table th{font-size:9px;font-weight:600;color:var(--gold);text-transform:uppercase;letter-spacing:.06em;padding:5px 8px;border-bottom:.5px solid var(--border);text-align:left;background:var(--gray2)}
+.tour-table td{padding:6px 8px;border-bottom:.5px solid var(--border);vertical-align:middle}
+.tour-table tr:hover td{background:var(--gray3)}
+.b-tour{background:rgba(171,152,104,.15);color:var(--gold);border:.5px solid rgba(171,152,104,.3)}
+
+/* ── Source note ── */
+.src{font-size:10px;color:var(--muted);margin-top:8px;font-style:italic}
+
+/* ── Overview highlight numbers ── */
+.overview-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px}
+.ov-card{background:var(--gray2);border:.5px solid var(--border);border-radius:4px;padding:18px 20px;position:relative;overflow:hidden}
+.ov-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--gold)}
+.ov-lbl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px}
+.ov-val{font-family:'Oswald',sans-serif;font-size:28px;font-weight:500;color:var(--white);line-height:1}
+.ov-sub{font-size:11px;color:var(--muted);margin-top:4px}
+.ov-delta{font-size:12px;margin-top:6px}
+.legend{display:flex;gap:14px;margin-bottom:10px;flex-wrap:wrap}
+.leg-i{display:flex;align-items:center;gap:5px;font-size:10px;color:var(--muted)}
+.leg-d{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.daily-bars{display:flex;align-items:flex-end;gap:2px;height:60px}
+.info-box{background:rgba(171,152,104,.07);border:.5px solid rgba(171,152,104,.25);border-radius:3px;padding:10px 12px;font-size:11px;color:var(--muted);line-height:1.6;margin-top:8px}
+.info-box span{color:var(--gold2)}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.dc{background:var(--gray3);border-radius:3px;padding:8px 10px}
+.dc-l{font-size:10px;color:var(--muted);margin-bottom:2px}
+.dc-v{font-family:'Oswald',sans-serif;font-size:16px}
+.order-row{padding:9px 0;border-bottom:.5px solid var(--border)}
+.order-row:last-child{border-bottom:none}
+.order-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:3px}
+.order-nm{font-size:12px;font-weight:600}
+.order-amt{font-family:'Oswald',sans-serif;font-size:13px;color:var(--gold)}
+.order-d{font-size:11px;color:var(--muted);line-height:1.5}
+.div-row{display:flex;align-items:center;gap:8px;margin:6px 0}
+.div-line{flex:1;height:.5px;background:var(--border)}
+.div-txt{font-size:10px;color:var(--muted);white-space:nowrap}
+.obs-card{background:var(--gray2);border:.5px solid var(--border);border-radius:3px;padding:10px 12px}
+.obs-title{font-size:10px;font-weight:600;color:var(--gold);text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px}
+.obs-body{font-size:11px;color:var(--white);line-height:1.6}
+</style>
+</head>
+<body>
+
+<!-- ══ TOP NAV ══════════════════════════════════════════════════════════════ -->
+<div class="topbar">
+  <div class="logo">
+    <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACwAAAAsCAIAAACR5s1WAAABAGlDQ1BpY2MAABiVY2BgPMEABCwGDAy5eSVFQe5OChGRUQrsDxgYgRAMEpOLCxhwA6Cqb9cgai/r4lGHC3CmpBYnA+kPQKxSBLQcaKQIkC2SDmFrgNhJELYNiF1eUlACZAeA2EUhQc5AdgqQrZGOxE5CYicXFIHU9wDZNrk5pckIdzPwpOaFBgNpDiCWYShmCGJwZ3AC+R+iJH8RA4PFVwYG5gkIsaSZDAzbWxkYJG4hxFQWMDDwtzAwbDuPEEOESUFiUSJYiAWImdLSGBg+LWdg4I1kYBC+wMDAFQ0LCBxuUwC7zZ0hHwjTGXIYUoEingx5DMkMekCWEYMBgyGDGQCm1j8/yRb+6wAAACBjSFJNAAB6JgAAgIQAAPoAAACA6AAAdTAAAOpgAAA6mAAAF3CculE8AAAABmJLR0QA/wD/AP+gvaeTAAAAB3RJTUUH6gULEi04c2APWgAACYpJREFUWMO1WG9sk9Ua/533ffv2z+jWP/vbrbh16HBz7WATYSpy3RTRXPygeNFoTGpC0OA19xsmeBNQP6g3qHdRI1EyTNSY8IXgHCPARYS7dZS54uY2yka37m+3bmVr1/Zt+5774cgb4I51THjSLOc9e85zfs9zfud5zjnAsoQQwhocx/E8f1Pn3ZW7NA2/vGFlZWWJRCIejz/66KMbN24cHx+PRCK5ubmJRCKVSt0VxBzHARAEYcOGDQDq6uqOHDmybds2AE6n89y5cxqNpqys7Pvvv9+1axfP8zqdLiMj4zbsp9UghMiyzHFcQ0NDVVUVx3FTU1PRaPTChQsA3G732bNnY7HYunXrNBrNt99+m0qlnE7nhx9+WFhYqDjwZ0HYbLZXXnlFlmVJklauXMnzvMfj+fTTT999910APM8LggCgvLzc5XLNzMyIomi323t6epxOJwCdTscUlglCFMX169e//fbber0ewA8//FBRUWEwGPLz86urq1UqVUFBwezs7MjICICioqJoNGoymTZt2lRRUVFdXd3Y2KhSqQ4dOlRVVaXRaBaZaGFichxHKX322Wd37tzp9/t37NgRDAabmpo2b978yCOPXLx40ev1ut3uS5cuhUKhtrY2AK2trUajsa+vb+vWrYODgz6f7/jx41988YXD4SgpKTl//nwoFLptqrIBzzzzzIULFw4cOPD+++8TQkpKSiwWCwBmTbGpNBgDqqura2trn3vuuaNHjwYCAUbhpZBj4XgAeOCBB/bt26fX60VRVKYkhPyfWzf31NbWNjQ0fPnll4w6izmcFocsy2q1WpZTiUTSkm+ssZfE4pIkJXme06hFT/eQ0aBbvapgLHCVgGi1Kp1G7PaOeQfGANTU1PT398/MzCw+SxreyrJMCJEkCaAMcpZes7LQSCmVZegz1EMjU3k5mVqtKi87U5+hubckV6NVRaJx78CYShDcbvdSeLCABmMlpfSPEBOifFryjIX5xvB8PJlMCQIn8PzoREhU8XORWIk1R5KSKpHneX4yODc6Ps2mX9DOXRGO+1MZ+ma+mEwmm82WlZV19epVSqnVarVarWq1enZ2luO4e1etKrAUiKI4OzvHEQLAbq80mcyTk5McRwgIBQwGg81my87OBjA/Pw+A5/nS0tK8vDy9Xh8KhRaFw/MA6urqKKWpVGrt2rUA3nvvPUppV1eXSqUCcPr0aUopy5UAzGZzY2Pjxx9/vGnTJgBs++zcuZOF/eDBg0ytrKxMkiRK6ZUrV5QtdkMglRarfi6Xa3BwkOO4uro6ACdOnABQUVFRU1OjfHZ0dLAhoigODw/7/X6bzYZrqUVh4po1a1jb4XAwHziOW5CnNyQQnufD4fCZM2cA1NfXA2hvb/d6vSxCAE6dOgWgp6eH6QcCgUAgEA7PNTY2Km4oLpWWllqtVgAPPvjg7RCE5wG89NJLlNKZmZl77rkHwIEDByilp0+fBlBYWNjR0bFixQostK9YoXr99dcppbFYjFL65JNPKotIKR0cHFSr1WkiIcsygDNnzoRCIYPB8NhjjwGIRCLMm+zs7KKioqmpqXA4TAhhW60g13hvSQGuy9xMRkdHAdjtdgCVlZWRSCQej/M8v+AWvQEEpZQQMjw83N7eDuCJJ54AUFVVBUCn09XW1q5evXpgYAAAIZxOKwKotq/c8pcKABk6NZuA/T179ixjQ2lpqclkcrvdY2NjoiimB4Fr9aKlpQXAQw89ZLPZJEn6+eefAWzevHnNmjW//vorAFlOZel1//zHX/+2tXr92uJ/vbPNtjI3lZKVcPb29gYCgcrKShZOl8sVj8dvVcNu7mVIT548CaC4uNjpdA4ODh46dAjAU089tXHjRpfLBYDnubFA6JvDrZl6bX5uVtPJ3y72+EVRUCyMj497PJ7777+flVC3232rtVgABPPD4/F4PB6VSvXWW2/5fL6ffvpJlmWWxNjWYNasFtORY55/H/xPXnYWwMrLH5JKpVwulyiKjz/+eCwW6+rqUqvVtwKxQAHjeT6VSp04ccLhcKxYsaKvr29iYqKjo6Ompqarq4tFlWHt7hv9r/tyKiWbjSsIISlZvt4OI5Yoit3d3T6fbxEQCywSU21ubgYgSRJznX2yNKUs7XQoLAiCyWQMzoQZqRUjoigy9gDo7OyMRqOCINwGCOZlW1sby0VsOzCqejweBSUAQeD37Hlnz553cnJycC1XsuEsmQ4NDSkhkWX5+myWBgRbkUgk0t7ePjQ0FIvFWAz6+/sZIHbIAHDffWUGg2H37t1Mh4FjcWJJqbe3F8D58+dx44UxPScUc999911RUREAQRCi0ej+/fvZwVqJxO+//97f379///69e/fOzc2xzpGREa/X6/f7ARw9ejQjI6O7uxvAL7/8kkwm5Rt5s3xRVv76LEnIH787LDedZhcugAsVRmUgIURh8UJn45u9Sg+IUrp+balarRJ4TkokBZ7L1GubT/2WSCTXV6/KytRFYxLPcQBGJ0K9l0cJwRLPcsJSlAghgsAnEslia/bsXMyQpRsPhAjIquK8vJwh/2jQZMhwlFtDs9FkMhWLJwkhvZdHBUFIJJJ3DAQAZq6z208AtVo1GZwlhMzMzvMcJwh8R9fQWODq/Hyc5zlBxU9Ph5Uhd0ysVuuOHTuWvnAAzGbz888/n/YqvKRIsBS+d+/ezMzMYDAYDodbWlo4jqNUZuutpHBCCNu8FkvB1FTwo48+slgshw8fZmRafJbF7occx7ET74YNG+Lx+GeffcbO3C+88AKl0Gg0ZrOZkZ8QkpubK6rUL7/88ptv/r20tNTpdF66dGnLli2U0rS30MX+zVzcvn273+9ft27dV1991dra+uqrr27fvh3A008//cEHH7z22msajWb37t379u3Ly88TBCEnJ2dsbAzAJ5988sYbb2g0mrQJKh1Gjvv888+bmprOnTvX0NCg1WrZzR+ATqfz+XxVVVWSJJWXl1dUVAwNDTU3N9vtdqPRqNVqBwYGvv76a/Zes/hlMM3DGaU0FAp5PJ6enp4rV668+OKLkiSpVKrjx4/b7fZdu3b9+OOP7e3tDoejvr6+ra2tp6envLz84Ycf5jiut7fX6/UGg0Gkk/Svd+zNanJykhAyPT09MTEhy3JnZ2d9ff3ly5cLCgpaWlqKi4t9Pp/D4WhpafH7/cPDw8eOHcO1FJd2iqWKEk+lYbFYzGYzu1OYzeb8/HytVrv4O8Qdg3KrEnA9ymU+yiwb0PX1admm/gfvD1mhjuAUUgAAAB50RVh0aWNjOmNvcHlyaWdodABHb29nbGUgSW5jLiAyMDE2rAszOAAAABR0RVh0aWNjOmRlc2NyaXB0aW9uAHNSR0K6kHMHAAAAAElFTkSuQmCC" alt="Western Market DC" style="width:44px;height:44px;flex-shrink:0">
+    <div>
+      <div class="brand">Western Market</div>
+      <div class="brand-sub">2000 Penn · Foggy Bottom · Est. 1803</div>
+    </div>
+  </div>
+  <nav class="nav-links">
+    <button class="nav-btn active" onclick="nav('overview',this)">Overview</button>
+    <button class="nav-btn" onclick="nav('sales',this)">Sales</button>
+    <button class="nav-btn" onclick="nav('leases',this)">Leases & AR</button>
+    <button class="nav-btn" onclick="nav('traffic',this)">Foot Traffic</button>
+    <button class="nav-btn" onclick="nav('tours',this)">Tour Groups</button>
+    <button class="nav-btn" onclick="nav('swipeit',this)">Swipe It</button>
+    <button class="nav-btn" onclick="nav('web',this)">Web & Digital</button>
+    <button class="nav-btn" onclick="nav('events',this)">Events</button>
+  </nav>
+  <div class="report-date">April 2026 · Data as of Mar 2026</div>
+</div>
+
+<!-- ══ OVERVIEW ═════════════════════════════════════════════════════════════ -->
+<div class="panel active" id="panel-overview">
+  <div class="sec-label">Executive Overview — March 2026</div>
+  <div class="overview-grid">
+    <div class="ov-card">
+      <div class="ov-lbl">Total Sales — 2025 Annual</div>
+      <div class="ov-val">$18.5M</div>
+      <div class="ov-sub">WM ($11.7M) + 2K Penn ($6.7M)</div>
+      <div class="ov-delta neu">27 active tenants · 2 vacant</div>
+    </div>
+    <div class="ov-card">
+      <div class="ov-lbl">Entrance Foot Traffic — March</div>
+      <div class="ov-val">442K</div>
+      <div class="ov-sub">Weekday avg 15K · Weekend avg 8.7K</div>
+      <div class="ov-delta up">▲ 31% vs February</div>
+    </div>
+    <div class="ov-card">
+      <div class="ov-lbl">Website Active Users — March</div>
+      <div class="ov-val">8,961</div>
+      <div class="ov-sub">GA4 · 96% new users</div>
+      <div class="ov-delta neu">7,936 visits via Squarespace</div>
+    </div>
+  </div>
+  <div class="overview-grid">
+    <div class="ov-card">
+      <div class="ov-lbl">Gift Card Sales — March</div>
+      <div class="ov-val">$13,935</div>
+      <div class="ov-sub">112 cards · 3 tour operators</div>
+      <div class="ov-delta up">99% from tour groups</div>
+    </div>
+    <div class="ov-card">
+      <div class="ov-lbl">% Rent Threshold — 2025</div>
+      <div class="ov-val">7 / 22</div>
+      <div class="ov-sub">Tenants that hit annual threshold</div>
+      <div class="ov-delta neu">$215,552 total % rent owed</div>
+    </div>
+    <div class="ov-card">
+      <div class="ov-lbl">Office Foot Traffic — March</div>
+      <div class="ov-val">47K</div>
+      <div class="ov-sub">Weekday avg 2,100 · Weekend 303</div>
+      <div class="ov-delta up">▲ 11% vs February</div>
+    </div>
+  </div>
+
+  <div class="gold-div"></div>
+  <div class="sec-label">2025 Sales — month over month</div>
+  <div class="mom-grid" id="ov-mom"></div>
+
+  <div class="grid3">
+    <div class="card">
+      <div class="card-title">Top tenants by 2025 sales</div>
+      <div class="bar-row"><div class="bar-lbl">Andy's Pizza</div><div class="bar-track"><div class="bar-fill" style="width:100%;background:var(--gold)"></div></div><div class="bar-val">$3.27M</div></div>
+      <div class="bar-row"><div class="bar-lbl">Duke's Grocery</div><div class="bar-track"><div class="bar-fill" style="width:83%;background:var(--gold)"></div></div><div class="bar-val">$2.73M</div></div>
+      <div class="bar-row"><div class="bar-lbl">Maman</div><div class="bar-track"><div class="bar-fill" style="width:74%;background:var(--gold2)"></div></div><div class="bar-val">$2.42M</div></div>
+      <div class="bar-row"><div class="bar-lbl">Bindaas</div><div class="bar-track"><div class="bar-fill" style="width:49%;background:var(--gold2)"></div></div><div class="bar-val">$1.60M</div></div>
+      <div class="bar-row"><div class="bar-lbl">Bullfrog Bagels</div><div class="bar-track"><div class="bar-fill" style="width:40%;background:var(--blue)"></div></div><div class="bar-val">$1.32M</div></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Web traffic sources — March</div>
+      <div class="bar-row"><div class="bar-lbl">Google organic</div><div class="bar-track"><div class="bar-fill" style="width:100%;background:var(--green)"></div></div><div class="bar-val">6,302</div></div>
+      <div class="bar-row"><div class="bar-lbl">Direct</div><div class="bar-track"><div class="bar-fill" style="width:43%;background:var(--gold)"></div></div><div class="bar-val">2,732</div></div>
+      <div class="bar-row"><div class="bar-lbl">WiFi portal</div><div class="bar-track"><div class="bar-fill" style="width:15%;background:var(--blue)"></div></div><div class="bar-val">949</div></div>
+      <div class="bar-row"><div class="bar-lbl">Bing + other</div><div class="bar-track"><div class="bar-fill" style="width:7%;background:var(--gray3)"></div></div><div class="bar-val">432</div></div>
+      <div class="bar-row"><div class="bar-lbl">Social</div><div class="bar-track"><div class="bar-fill" style="width:3%;background:var(--gray3)"></div></div><div class="bar-val">177</div></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Entry points — March Fyma</div>
+      <div class="bar-row"><div class="bar-lbl">Main Lobby</div><div class="bar-track"><div class="bar-fill" style="width:100%;background:var(--gold)"></div></div><div class="bar-val">~138K</div></div>
+      <div class="bar-row"><div class="bar-lbl">Center Galleria</div><div class="bar-track"><div class="bar-fill" style="width:90%;background:var(--gold)"></div></div><div class="bar-val">~124K</div></div>
+      <div class="bar-row"><div class="bar-lbl">West Entry</div><div class="bar-track"><div class="bar-fill" style="width:64%;background:var(--gold2)"></div></div><div class="bar-val">~89K</div></div>
+      <div class="bar-row"><div class="bar-lbl">Paul Bakery Entry</div><div class="bar-track"><div class="bar-fill" style="width:38%;background:var(--blue)"></div></div><div class="bar-val">~53K</div></div>
+      <div class="bar-row"><div class="bar-lbl">Other entries</div><div class="bar-track"><div class="bar-fill" style="width:28%;background:var(--gray3)"></div></div><div class="bar-val">~38K</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ SALES & AR ════════════════════════════════════════════════════════════ -->
+<div class="panel" id="panel-sales">
+  <div class="month-nav" id="sales-month-nav"></div>
+  <div class="metrics m4" id="sales-metrics"></div>
+  <div class="sec-label" id="sales-mom-label">Month-over-month change</div>
+  <div class="mom-grid" id="sales-mom"></div>
+  <div class="sec-label" id="sales-yoy-label" style="margin-top:8px;display:none">Year-over-year change</div>
+  <div class="mom-grid" id="sales-yoy"></div>
+
+  <div class="gold-div"></div>
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+    <div class="sec-label" style="margin:0">WM Food Hall Tenants</div>
+    <div style="font-family:'Oswald',sans-serif;font-size:12px;color:var(--white)" id="wm-total-lbl"></div>
+  </div>
+  <table class="t-table" id="wm-table"></table>
+
+  <div class="gold-div"></div>
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+    <div class="sec-label" style="margin:0">2K Penn Retail</div>
+    <div style="font-family:'Oswald',sans-serif;font-size:12px;color:var(--white)" id="penn-total-lbl"></div>
+  </div>
+  <table class="t-table" id="penn-table"></table>
+
+  <p class="src" id="sales-src">2026: loading from Google Sheet&hellip; · 2025: hardcoded annual · % Rent Tracker moved to Leases & AR tab</p>
+</div>
+
+<!-- ══ LEASES & AR ════════════════════════════════════════════════════════════ -->
+<div class="panel" id="panel-leases">
+  <div class="sub-tabs">
+    <div class="sub-tab active" onclick="subNav('leases-summary',this)">Lease Summary</div>
+    <div class="sub-tab" onclick="subNav('leases-pct',this)">% Rent Tracker</div>
+    <div class="sub-tab" onclick="subNav('leases-ar',this)">AR Aging</div>
+  </div>
+
+  <!-- ── LEASE SUMMARY ── -->
+  <div class="sub-panel active" id="sub-leases-summary">
+    <div class="metrics m4" style="margin-bottom:14px">
+      <div class="metric"><div class="metric-lbl">Total leased sq ft</div><div class="metric-val" id="ls-sqft-total">—</div><div class="metric-delta neu">Active stalls only</div></div>
+      <div class="metric"><div class="metric-lbl">Active leases</div><div class="metric-val" id="ls-active-count">—</div><div class="metric-delta neu">WM + Penn + Retail</div></div>
+      <div class="metric"><div class="metric-lbl">Expiring in 2026</div><div class="metric-val" id="ls-expiring-count">—</div><div class="metric-delta down">Needs renewal attention</div></div>
+      <div class="metric"><div class="metric-lbl">Monthly base rent</div><div class="metric-val" id="ls-rent-total">—</div><div class="metric-delta neu">Active tenants</div></div>
+    </div>
+
+    <div class="sec-label">Western Market Food Hall</div>
+    <table class="t-table" id="lease-wm-table" style="margin-bottom:14px"></table>
+
+    <div class="gold-div"></div>
+    <div class="sec-label">2000 Penn</div>
+    <table class="t-table" id="lease-penn-table" style="margin-bottom:14px"></table>
+
+    <div class="gold-div"></div>
+    <div class="sec-label">Retail Corridor</div>
+    <table class="t-table" id="lease-retail-table" style="margin-bottom:14px"></table>
+
+    <div class="gold-div"></div>
+    <div class="sec-label">Former Tenants — Lease on File</div>
+    <table class="t-table" id="lease-former-table"></table>
+    <p class="src" style="margin-top:8px">Source: Leases tab · WM 2026 AR Google Sheet · Data as of May 2026</p>
+  </div>
+
+  <!-- ── % RENT TRACKER ── -->
+  <div class="sub-panel" id="sub-leases-pct">
+    <div class="sec-label" id="rent-tracker-label">% Rent Tracker — 2026 YTD</div>
+    <table class="t-table" id="rent-table"></table>
+    <p class="src" style="margin-top:8px">% rent calculated against hardcoded 2025 annual sales and live 2026 YTD · Thresholds from Lease Summary tab</p>
+  </div>
+
+  <!-- ── AR AGING ── -->
+  <div class="sub-panel" id="sub-leases-ar">
+    <div class="metrics m4" style="margin-bottom:14px">
+      <div class="metric"><div class="metric-lbl">Total outstanding</div><div class="metric-val">$794,802</div><div class="metric-delta down">As of May 11, 2026</div></div>
+      <div class="metric"><div class="metric-lbl">WM active tenants</div><div class="metric-val">$330,418</div><div class="metric-delta neu">Food hall</div></div>
+      <div class="metric"><div class="metric-lbl">2000 Penn + Retail</div><div class="metric-val">$464,384</div><div class="metric-delta neu">Penn + corridor</div></div>
+      <div class="metric"><div class="metric-lbl">90+ days</div><div class="metric-val" id="ar-90plus">—</div><div class="metric-delta down">Highest risk bucket</div></div>
+    </div>
+
+    <div class="sec-label">WM Food Hall — Active Tenants</div>
+    <table class="t-table" id="ar-wm-table" style="margin-bottom:14px"></table>
+
+    <div class="gold-div"></div>
+    <div class="sec-label">2000 Penn & Retail Corridor</div>
+    <table class="t-table" id="ar-penn-table" style="margin-bottom:14px"></table>
+
+    <div class="gold-div"></div>
+    <div class="sec-label">Termed Tenants — Awaiting Resolution</div>
+    <div class="obs-card" style="margin-bottom:10px"><div class="obs-title">Note</div><div class="obs-body">These tenants have vacated. Balances represent amounts still owed post-termination. EXPAT is awaiting final termination agreement.</div></div>
+    <table class="t-table" id="ar-termed-table"></table>
+    <p class="src" style="margin-top:8px">Source: AR tab · WM 2026 AR Google Sheet · Data as of May 11, 2026 · Late fee = 5% on the 5th</p>
+  </div>
+</div>
+
+<!-- ══ FOOT TRAFFIC ══════════════════════════════════════════════════════════ -->
+<div class="panel" id="panel-traffic">
+  <div class="sec-label">Entrance Footfall — March 2026 · Fyma</div>
+  <div class="metrics m3">
+    <div class="metric"><div class="metric-lbl">Total this month</div><div class="metric-val">442K</div><div class="metric-delta up">▲ 31% vs Feb (339K)</div></div>
+    <div class="metric"><div class="metric-lbl">Weekday average</div><div class="metric-val">15K</div><div class="metric-delta up">▲ 11% vs Feb (14K)</div></div>
+    <div class="metric"><div class="metric-lbl">Weekend average</div><div class="metric-val">8.7K</div><div class="metric-delta down">▼ 1% vs Feb (8.8K)</div></div>
+  </div>
+  <div class="grid2">
+    <div class="card">
+      <div class="card-title">Monthly trend — entrance footfall</div>
+      <div style="display:flex;align-items:flex-end;gap:4px;height:70px" id="entrance-trend"></div>
+      <div style="display:flex;gap:4px;margin-top:4px" id="entrance-months"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Entry point breakdown</div>
+      <div class="entry-grid">
+        <div class="entry-cell"><div class="entry-nm">Main Lobby</div><div class="entry-v">~138K</div><div class="entry-p">~31%</div></div>
+        <div class="entry-cell"><div class="entry-nm">Center Galleria</div><div class="entry-v">~124K</div><div class="entry-p">~28%</div></div>
+        <div class="entry-cell"><div class="entry-nm">West Entry</div><div class="entry-v">~89K</div><div class="entry-p">~20%</div></div>
+        <div class="entry-cell"><div class="entry-nm">Paul Bakery</div><div class="entry-v">~53K</div><div class="entry-p">~12%</div></div>
+        <div class="entry-cell"><div class="entry-nm">Chipotle External</div><div class="entry-v">~27K</div><div class="entry-p">~6%</div></div>
+        <div class="entry-cell"><div class="entry-nm">CVS Entry</div><div class="entry-v">~11K</div><div class="entry-p">~3%</div></div>
+      </div>
+      <p class="src">Approximate split from Fyma group breakdown · exact figures in portal export</p>
+    </div>
+  </div>
+
+  <div class="gold-div"></div>
+  <div class="sec-label">Office Footfall — March 2026 · Fyma</div>
+  <div class="metrics m3">
+    <div class="metric"><div class="metric-lbl">Total this month</div><div class="metric-val">47K</div><div class="metric-delta up">▲ 11% vs Feb (43K)</div></div>
+    <div class="metric"><div class="metric-lbl">Weekday average</div><div class="metric-val">2,100</div><div class="metric-delta neu">Flat vs Feb</div></div>
+    <div class="metric"><div class="metric-lbl">Weekend average</div><div class="metric-val">303</div><div class="metric-delta down">▼ 4% vs Feb (316)</div></div>
+  </div>
+  <div class="grid2">
+    <div class="card">
+      <div class="card-title">Monthly trend — office footfall</div>
+      <div style="display:flex;align-items:flex-end;gap:4px;height:70px" id="office-trend"></div>
+      <div style="display:flex;gap:4px;margin-top:4px" id="office-months"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Office vs entrance correlation</div>
+      <div style="font-size:12px;line-height:1.7;color:var(--white)">Office footfall (47K) = <strong style="color:var(--gold)">~11%</strong> of entrance footfall (442K) in March. Peak office days Mon–Thu align with higher food hall sales — tracking this ratio over time helps isolate office worker impact on revenue.</div>
+    </div>
+  </div>
+  <p class="src">Source: Fyma monthly report · Western Market · March 2026 · Upload cadence: monthly</p>
+</div>
+
+<!-- ══ TOUR GROUPS ════════════════════════════════════════════════════════════ -->
+<div class="panel" id="panel-tours">
+  <div class="metrics m4">
+    <div class="metric"><div class="metric-lbl">Tour groups — March</div><div class="metric-val">4</div><div class="metric-delta neu">3 operators</div></div>
+    <div class="metric"><div class="metric-lbl">Total guests — March</div><div class="metric-val">198</div><div class="metric-delta neu">Sidon + Envoys + Four Winds</div></div>
+    <div class="metric"><div class="metric-lbl">Gift card $ — March</div><div class="metric-val">$13,800</div><div class="metric-delta up">99% of all card sales</div></div>
+    <div class="metric"><div class="metric-lbl">Avg $/guest</div><div class="metric-val">$69.70</div><div class="metric-delta neu">Across 3 operators</div></div>
+  </div>
+  <div class="grid2">
+    <div class="card">
+      <div class="card-title">March tour group visits</div>
+      <table class="tour-table">
+        <thead><tr><th>Operator</th><th>Date</th><th>Guests</th><th>Cards</th><th>GC Total</th><th>Loading</th></tr></thead>
+        <tbody>
+          <tr><td>Sidon Travel <span class="badge b-tour">tour</span></td><td>Mar 5</td><td>57</td><td>57</td><td>$1,425</td><td>On-site</td></tr>
+          <tr><td>Envoys <span class="badge b-tour">tour</span></td><td>Mar 5</td><td>89</td><td>89</td><td>$2,225</td><td>On-site</td></tr>
+          <tr><td>Four Winds Tours <span class="badge b-tour">tour</span></td><td>Mar 18</td><td>46</td><td>52</td><td>$9,150</td><td>Virtual</td></tr>
+          <tr><td>Four Winds Tours <span class="badge b-tour">tour</span></td><td>Mar 19</td><td>6</td><td>5</td><td>$1,040</td><td>Virtual</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="card">
+      <div class="card-title">Operator breakdown — gift card value</div>
+      <div class="bar-row"><div class="bar-lbl">Four Winds Tours</div><div class="bar-track"><div class="bar-fill" style="width:100%;background:var(--gold)"></div></div><div class="bar-val">$10,150</div></div>
+      <div class="bar-row"><div class="bar-lbl">Envoys</div><div class="bar-track"><div class="bar-fill" style="width:22%;background:var(--gold2)"></div></div><div class="bar-val">$2,225</div></div>
+      <div class="bar-row"><div class="bar-lbl">Sidon Travel</div><div class="bar-track"><div class="bar-fill" style="width:14%;background:var(--gold2)"></div></div><div class="bar-val">$1,425</div></div>
+      <div style="margin-top:10px">
+        <div class="two-col">
+          <div class="dc"><div class="dc-l">Tour group share</div><div class="dc-v">99%</div></div>
+          <div class="dc"><div class="dc-l">On-site loaded</div><div class="dc-v">$3,650</div></div>
+          <div class="dc"><div class="dc-l">Virtual loaded</div><div class="dc-v">$10,285</div></div>
+          <div class="dc"><div class="dc-l">Repeat operators</div><div class="dc-v">1 of 3</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="grid3">
+    <div class="obs-card"><div class="obs-title">Concentration risk</div><div class="obs-body">99% of gift card revenue came from 3 operators. Four Winds alone = 73%. One cancelled tour significantly impacts monthly totals.</div></div>
+    <div class="obs-card"><div class="obs-title">On-site vs virtual</div><div class="obs-body">Sidon & Envoys buy $25 cards loaded at the market. Four Winds purchases virtually at higher per-card values — two distinct operational flows.</div></div>
+    <div class="obs-card"><div class="obs-title">Tracker available</div><div class="obs-body">Tour Group Tracker Google Sheet is ready for logging. Update it after each visit — dashboard KPIs will reflect your entries automatically.</div></div>
+  </div>
+  <p class="src">Source: Swipe It payout report + manual tour log · March 2026</p>
+</div>
+
+<!-- ══ SWIPE IT ══════════════════════════════════════════════════════════════ -->
+<div class="panel" id="panel-swipeit">
+  <div class="metrics m4">
+    <div class="metric"><div class="metric-lbl">Cards sold — March</div><div class="metric-val">112</div><div class="metric-delta neu">7 orders</div></div>
+    <div class="metric"><div class="metric-lbl">Total value sold</div><div class="metric-val">$13,935</div><div class="metric-delta up">Tour groups: $13,800</div></div>
+    <div class="metric"><div class="metric-lbl">Ecard redemptions</div><div class="metric-val">$211</div><div class="metric-delta neu">Feb settlement · 6 tenants</div></div>
+    <div class="metric"><div class="metric-lbl">Physical redemptions</div><div class="metric-val">$407</div><div class="metric-delta neu">March billing · 6 tenants</div></div>
+  </div>
+  <div class="grid2">
+    <div class="card">
+      <div class="card-title">Gift card purchases — March orders</div>
+      <div class="order-row"><div class="order-top"><span class="order-nm">Sidon Travel <span class="badge b-tour">tour</span></span><span class="order-amt">$1,425</span></div><div class="order-d">57 cards · $25/card · Mar 5 · On-site loaded</div></div>
+      <div class="order-row"><div class="order-top"><span class="order-nm">Envoys <span class="badge b-tour">tour</span></span><span class="order-amt">$2,225</span></div><div class="order-d">89 cards · $25/card · Mar 5 · On-site loaded</div></div>
+      <div class="order-row"><div class="order-top"><span class="order-nm">Philip Bachman <span class="badge b-no">individual</span></span><span class="order-amt">$60</span></div><div class="order-d">1 card · $60 · Mar 16 · Virtual</div></div>
+      <div class="div-row"><div class="div-line"></div><div class="div-txt">Four Winds Tours — 3 orders</div><div class="div-line"></div></div>
+      <div class="order-row"><div class="order-top"><span class="order-nm">Four Winds Tours <span class="badge b-tour">tour</span></span><span class="order-amt">$8,905</span></div><div class="order-d">46 cards · $194 avg · Mar 18 · Virtual</div></div>
+      <div class="order-row"><div class="order-top"><span class="order-nm">Four Winds Tours <span class="badge b-tour">tour</span></span><span class="order-amt">$205</span></div><div class="order-d">1 card · $205 · Mar 18 · Virtual</div></div>
+      <div class="order-row"><div class="order-top"><span class="order-nm">Four Winds Tours <span class="badge b-tour">tour</span></span><span class="order-amt">$1,040</span></div><div class="order-d">5 cards · $208 avg · Mar 19 · Virtual</div></div>
+      <div class="order-row"><div class="order-top"><span class="order-nm">Jody Bolluyt <span class="badge b-no">individual</span></span><span class="order-amt">$75</span></div><div class="order-d">1 card · $75 · Mar 25 · Virtual</div></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Ecard redemptions by tenant — February</div>
+      <div class="bar-row"><div class="bar-lbl">GiGi's Pasta</div><div class="bar-track"><div class="bar-fill" style="width:100%;background:var(--gold)"></div></div><div class="bar-val">$61.25</div></div>
+      <div class="bar-row"><div class="bar-lbl">Onkei</div><div class="bar-track"><div class="bar-fill" style="width:91%;background:var(--gold)"></div></div><div class="bar-val">$55.94</div></div>
+      <div class="bar-row"><div class="bar-lbl">Andy's Pizza</div><div class="bar-track"><div class="bar-fill" style="width:67%;background:var(--gold2)"></div></div><div class="bar-val">$40.95</div></div>
+      <div class="bar-row"><div class="bar-lbl">Capo Deli</div><div class="bar-track"><div class="bar-fill" style="width:33%;background:var(--gold2)"></div></div><div class="bar-val">$20.00</div></div>
+      <div class="bar-row"><div class="bar-lbl">Bandoola Bowl</div><div class="bar-track"><div class="bar-fill" style="width:27%;background:var(--blue)"></div></div><div class="bar-val">$16.50</div></div>
+      <div class="bar-row"><div class="bar-lbl">Bullfrog Bagels</div><div class="bar-track"><div class="bar-fill" style="width:27%;background:var(--blue)"></div></div><div class="bar-val">$16.30</div></div>
+      <div class="gold-div" style="margin:10px 0"></div>
+      <div class="card-title">Physical redemptions — March billing</div>
+      <div class="bar-row"><div class="bar-lbl">Roaming Rooster</div><div class="bar-track"><div class="bar-fill" style="width:100%;background:var(--gold)"></div></div><div class="bar-val">$102.41</div></div>
+      <div class="bar-row"><div class="bar-lbl">Onkei</div><div class="bar-track"><div class="bar-fill" style="width:88%;background:var(--gold)"></div></div><div class="bar-val">$90.00</div></div>
+      <div class="bar-row"><div class="bar-lbl">Andy's Pizza</div><div class="bar-track"><div class="bar-fill" style="width:84%;background:var(--gold2)"></div></div><div class="bar-val">$86.35</div></div>
+      <div class="bar-row"><div class="bar-lbl">Mason's Lobster</div><div class="bar-track"><div class="bar-fill" style="width:28%;background:var(--blue)"></div></div><div class="bar-val">$28.85</div></div>
+    </div>
+  </div>
+  <div class="grid3">
+    <div class="obs-card"><div class="obs-title">Admin fee</div><div class="obs-body">$225/month flat fee covers money movement management by Swipe It + $0.14/transaction. March invoice: $238.44. Auto-pay — no action needed.</div></div>
+    <div class="obs-card"><div class="obs-title">Redemption lag</div><div class="obs-body">$13,935 sold in March will redeem over future months. Current redemption data ($618 combined) represents prior-month card usage.</div></div>
+    <div class="obs-card"><div class="obs-title">On-site loading</div><div class="obs-body">Sidon and Envoys buy $25 cards loaded at the market. Four Winds pre-loads virtually at higher values — two different operational flows.</div></div>
+  </div>
+  <p class="src">Purchases: Swipe It payout report (Excel) · Ecard redemptions: Settlement report (Excel, Feb) · Physical: Billing invoice (PDF, Mar)</p>
+</div>
+
+<!-- ══ WEB & DIGITAL ═════════════════════════════════════════════════════════ -->
+<div class="panel" id="panel-web">
+  <div class="sub-tabs">
+    <div class="sub-tab active" onclick="subNav('web-overview',this)">Overview</div>
+    <div class="sub-tab" onclick="subNav('web-sources',this)">Sources</div>
+    <div class="sub-tab" onclick="subNav('web-pages',this)">Top Pages</div>
+    <div class="sub-tab" onclick="subNav('web-geo',this)">Geography</div>
+  </div>
+
+  <div class="sub-panel active" id="sub-web-overview">
+    <div class="metrics m4">
+      <div class="metric"><div class="metric-lbl">Active users (GA4)</div><div class="metric-val">8,961</div><div class="metric-delta neu">8,626 new · 335 returning</div></div>
+      <div class="metric"><div class="metric-lbl">Visits (Squarespace)</div><div class="metric-val">7,936</div><div class="metric-delta neu">Sessions incl. tracked sources</div></div>
+      <div class="metric"><div class="metric-lbl">Avg engagement</div><div class="metric-val">52s</div><div class="metric-delta neu">Per active user · GA4</div></div>
+      <div class="metric"><div class="metric-lbl">Total events (GA4)</div><div class="metric-val">74,598</div><div class="metric-delta neu">All tracked interactions</div></div>
+    </div>
+    <div class="card" style="margin-bottom:14px">
+      <div class="card-title">GA4 vs Squarespace — channel comparison</div>
+      <div style="display:grid;grid-template-columns:2fr 1fr 1fr;gap:0">
+        <div style="font-size:9px;color:var(--gold);text-transform:uppercase;letter-spacing:.06em;padding:5px 8px;border-bottom:.5px solid var(--border)">Channel</div>
+        <div style="font-size:9px;color:#e6950a;text-transform:uppercase;letter-spacing:.06em;padding:5px 8px;border-bottom:.5px solid var(--border);text-align:right">GA4 Users</div>
+        <div style="font-size:9px;color:#5aaad9;text-transform:uppercase;letter-spacing:.06em;padding:5px 8px;border-bottom:.5px solid var(--border);text-align:right">Squarespace Visits</div>
+      </div>
+      <div id="web-compare"></div>
+      <p class="src">GA4 counts unique active users · Squarespace counts sessions. Differences expected — tools measure different things and complement each other.</p>
+    </div>
+    <div class="card">
+      <div class="card-title">Daily users — new vs returning · March 2026 · GA4</div>
+      <div class="legend"><div class="leg-i"><div class="leg-d" style="background:var(--gold)"></div>New</div><div class="leg-i"><div class="leg-d" style="background:var(--blue)"></div>Returning</div></div>
+      <div class="daily-bars" id="daily-bars"></div>
+      <p class="src" style="margin-top:6px">Spike Mar 16–20 — St. Patrick's Day weekend + spring break</p>
+    </div>
+  </div>
+
+  <div class="sub-panel" id="sub-web-sources">
+    <div class="grid2">
+      <div class="card">
+        <div class="card-title">Search engines · Squarespace</div>
+        <div class="bar-row"><div class="bar-lbl">Google</div><div class="bar-track"><div class="bar-fill" style="width:100%;background:var(--gold)"></div></div><div class="bar-val">6,302</div></div>
+        <div class="bar-row"><div class="bar-lbl">Bing</div><div class="bar-track"><div class="bar-fill" style="width:5%;background:var(--blue)"></div></div><div class="bar-val">288</div></div>
+        <div class="bar-row"><div class="bar-lbl">DuckDuckGo</div><div class="bar-track"><div class="bar-fill" style="width:2%;background:var(--gray3)"></div></div><div class="bar-val">103</div></div>
+        <div class="bar-row"><div class="bar-lbl">Yahoo!</div><div class="bar-track"><div class="bar-fill" style="width:1%;background:var(--gray3)"></div></div><div class="bar-val">41</div></div>
+        <p class="src">Search total: 6,734 · 85% of all tracked Squarespace traffic</p>
+      </div>
+      <div class="card">
+        <div class="card-title">Referral, social & email · Squarespace</div>
+        <div class="bar-row"><div class="bar-lbl">WiFi portal (wifast)</div><div class="bar-track"><div class="bar-fill" style="width:100%;background:#5aaad9"></div></div><div class="bar-val">949</div></div>
+        <div class="bar-row"><div class="bar-lbl">Yelp</div><div class="bar-track"><div class="bar-fill" style="width:7%;background:var(--gold2)"></div></div><div class="bar-val">65</div></div>
+        <div class="bar-row"><div class="bar-lbl">Instagram</div><div class="bar-track"><div class="bar-fill" style="width:5%;background:var(--gold2)"></div></div><div class="bar-val">44</div></div>
+        <div class="bar-row"><div class="bar-lbl">Facebook</div><div class="bar-track"><div class="bar-fill" style="width:4%;background:var(--gold2)"></div></div><div class="bar-val">39</div></div>
+        <div class="bar-row"><div class="bar-lbl">Washington.org</div><div class="bar-track"><div class="bar-fill" style="width:2%;background:var(--gray3)"></div></div><div class="bar-val">23</div></div>
+        <div class="bar-row"><div class="bar-lbl">Lonely Planet</div><div class="bar-track"><div class="bar-fill" style="width:2%;background:var(--gray3)"></div></div><div class="bar-val">19</div></div>
+        <div class="bar-row"><div class="bar-lbl">ChatGPT</div><div class="bar-track"><div class="bar-fill" style="width:1%;background:var(--gray3)"></div></div><div class="bar-val">4</div></div>
+      </div>
+    </div>
+    <div class="grid3">
+      <div class="obs-card"><div class="obs-title">WiFi portal</div><div class="obs-body">949 visits via wifast — the best proxy for in-venue digital engagement. People connecting to WM WiFi and landing on the site.</div></div>
+      <div class="obs-card"><div class="obs-title">Tourism referrals</div><div class="obs-body">42 combined visits from washington.org + Lonely Planet — quality out-of-town intent signals worth maintaining those listings.</div></div>
+      <div class="obs-card"><div class="obs-title">AI search emerging</div><div class="obs-body">ChatGPT, Gemini, Claude sending ~17 combined visits. New channel to track — AI-generated recommendations are an emerging traffic source.</div></div>
+    </div>
+  </div>
+
+  <div class="sub-panel" id="sub-web-pages">
+    <div class="grid2">
+      <div class="card">
+        <div class="card-title">Top pages overall · GA4</div>
+        <div class="bar-row"><div class="bar-lbl">Homepage</div><div class="bar-track"><div class="bar-fill" style="width:100%;background:var(--blue)"></div></div><div class="bar-val">6,871</div></div>
+        <div class="bar-row"><div class="bar-lbl">Stalls & Pop-Ups (SEO)</div><div class="bar-track"><div class="bar-fill" style="width:74%;background:var(--blue)"></div></div><div class="bar-val">5,080</div></div>
+        <div class="bar-row"><div class="bar-lbl">Homepage (alt URL)</div><div class="bar-track"><div class="bar-fill" style="width:50%;background:var(--gray3)"></div></div><div class="bar-val">3,425</div></div>
+        <div class="bar-row"><div class="bar-lbl">Stalls & Pop-Ups</div><div class="bar-track"><div class="bar-fill" style="width:30%;background:var(--gray3)"></div></div><div class="bar-val">2,091</div></div>
+        <div class="bar-row"><div class="bar-lbl">About</div><div class="bar-track"><div class="bar-fill" style="width:14%;background:var(--gray3)"></div></div><div class="bar-val">941</div></div>
+        <div class="bar-row"><div class="bar-lbl">Visit Us</div><div class="bar-track"><div class="bar-fill" style="width:5%;background:var(--gray3)"></div></div><div class="bar-val">348</div></div>
+        <div class="bar-row"><div class="bar-lbl">Events page</div><div class="bar-track"><div class="bar-fill" style="width:4%;background:var(--gray3)"></div></div><div class="bar-val">272</div></div>
+      </div>
+      <div class="card">
+        <div class="card-title">Top tenant pages · GA4</div>
+        <div class="bar-row"><div class="bar-lbl">GiGi's Pasta</div><div class="bar-track"><div class="bar-fill" style="width:100%;background:var(--gold)"></div></div><div class="bar-val">632</div></div>
+        <div class="bar-row"><div class="bar-lbl">Onkei</div><div class="bar-track"><div class="bar-fill" style="width:86%;background:var(--gold)"></div></div><div class="bar-val">544</div></div>
+        <div class="bar-row"><div class="bar-lbl">Capo Italian Deli</div><div class="bar-track"><div class="bar-fill" style="width:85%;background:var(--gold)"></div></div><div class="bar-val">538</div></div>
+        <div class="bar-row"><div class="bar-lbl">Maman</div><div class="bar-track"><div class="bar-fill" style="width:72%;background:var(--gold2)"></div></div><div class="bar-val">452</div></div>
+        <div class="bar-row"><div class="bar-lbl">Bandoola Bowl</div><div class="bar-track"><div class="bar-fill" style="width:70%;background:var(--gold2)"></div></div><div class="bar-val">443</div></div>
+        <div class="bar-row"><div class="bar-lbl">Arepa Zone</div><div class="bar-track"><div class="bar-fill" style="width:64%;background:var(--gold2)"></div></div><div class="bar-val">406</div></div>
+        <div class="bar-row"><div class="bar-lbl">Roaming Rooster</div><div class="bar-track"><div class="bar-fill" style="width:62%;background:var(--blue)"></div></div><div class="bar-val">391</div></div>
+        <p class="src">GiGi's Pasta leads despite being newest tenant — strong organic search interest</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="sub-panel" id="sub-web-geo">
+    <div class="grid2">
+      <div class="card">
+        <div class="card-title">Top cities · GA4</div>
+        <div class="bar-row"><div class="bar-lbl">Washington DC</div><div class="bar-track"><div class="bar-fill" style="width:100%;background:var(--gold)"></div></div><div class="bar-val">2,811</div></div>
+        <div class="bar-row"><div class="bar-lbl">Ashburn, VA †</div><div class="bar-track"><div class="bar-fill" style="width:51%;background:var(--gold2)"></div></div><div class="bar-val">1,422</div></div>
+        <div class="bar-row"><div class="bar-lbl">Baltimore, MD</div><div class="bar-track"><div class="bar-fill" style="width:15%;background:var(--blue)"></div></div><div class="bar-val">427</div></div>
+        <div class="bar-row"><div class="bar-lbl">New York, NY</div><div class="bar-track"><div class="bar-fill" style="width:13%;background:var(--blue)"></div></div><div class="bar-val">363</div></div>
+        <div class="bar-row"><div class="bar-lbl">Singapore</div><div class="bar-track"><div class="bar-fill" style="width:7%;background:var(--gray3)"></div></div><div class="bar-val">196</div></div>
+        <div class="bar-row"><div class="bar-lbl">Virginia Beach</div><div class="bar-track"><div class="bar-fill" style="width:6%;background:var(--gray3)"></div></div><div class="bar-val">167</div></div>
+        <div class="bar-row"><div class="bar-lbl">Reston, VA</div><div class="bar-track"><div class="bar-fill" style="width:4%;background:var(--gray3)"></div></div><div class="bar-val">110</div></div>
+        <p class="src">† Ashburn high count likely reflects data center IP routing</p>
+      </div>
+      <div class="card">
+        <div class="card-title">Geographic insights</div>
+        <div style="font-size:12px;line-height:1.8">
+          <div style="margin-bottom:8px"><span style="color:var(--gold);font-weight:600">DC metro dominates</span> — DC + MD/VA suburbs account for the majority of traffic, consistent with a local food hall audience.</div>
+          <div style="margin-bottom:8px"><span style="color:var(--gold);font-weight:600">National reach</span> — NYC (363), Chicago (87), Philadelphia (65) suggest out-of-town visitors or tour operators researching the venue.</div>
+          <div style="margin-bottom:8px"><span style="color:var(--gold);font-weight:600">GW referrals</span> — 15 users from columbian.gwu.edu + gwtoday.gwu.edu. Track against academic calendar.</div>
+          <div><span style="color:var(--gold);font-weight:600">International</span> — Singapore (196), London (11), Paris (7) — some likely data center routing.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <p class="src">GA4: live integration · Squarespace: monthly export · Both cover March 2026</p>
+</div>
+
+<!-- ══ EVENTS ════════════════════════════════════════════════════════════════ -->
+<style>
+/* ── Monthly calendar grid ── */
+.cal-nav{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.cal-nav-btn{font-family:'Oswald',sans-serif;font-size:13px;padding:4px 10px;border:.5px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;border-radius:3px;transition:all .12s}
+.cal-nav-btn:hover{border-color:var(--gold);color:var(--gold)}
+.cal-month-title{font-family:'Oswald',sans-serif;font-size:16px;font-weight:500;color:var(--white);letter-spacing:.06em;flex:1;text-align:center}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:14px}
+.cal-dow{font-size:9px;font-weight:600;color:var(--muted);text-align:center;padding:4px 0;text-transform:uppercase;letter-spacing:.06em}
+.cal-day{background:var(--gray2);border:.5px solid var(--border);border-radius:3px;min-height:72px;padding:5px 6px;cursor:default;position:relative;transition:border-color .12s}
+.cal-day:hover{border-color:var(--gold)}
+.cal-day.empty{background:transparent;border-color:transparent;min-height:0}
+.cal-day.today{border-color:var(--gold);border-width:1px}
+.cal-day.has-gw-break{border-top:2px solid var(--red)}
+.cal-day.has-gw-in{border-top:2px solid var(--green)}
+.cal-day-num{font-family:'Oswald',sans-serif;font-size:12px;color:var(--muted);margin-bottom:3px}
+.cal-day.weekend .cal-day-num{color:var(--gold2)}
+.cal-ev{font-size:9px;padding:1px 4px;border-radius:2px;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block}
+.cal-ev-wm{background:rgba(171,152,104,.25);color:var(--gold2)}
+.cal-ev-city{background:rgba(91,103,113,.25);color:#9ab0be}
+.cal-ev-wx{background:rgba(255,255,255,.06);color:var(--muted)}
+/* ── Weather log ── */
+.wx-table{width:100%;border-collapse:collapse;font-size:11px}
+.wx-table th{font-size:9px;font-weight:600;color:var(--gold);text-transform:uppercase;letter-spacing:.06em;padding:5px 8px;border-bottom:.5px solid var(--border);text-align:left;background:var(--gray2)}
+.wx-table th.r{text-align:right}
+.wx-table td{padding:6px 8px;border-bottom:.5px solid var(--border);vertical-align:middle}
+.wx-table td.r{text-align:right}
+.wx-table tr:hover td{background:var(--gray3)}
+.wx-icon{font-size:14px}
+.wx-form{display:grid;grid-template-columns:90px 80px 80px 1fr auto;gap:8px;align-items:end;padding:10px 0}
+/* ── Event detail form extra fields ── */
+.form-row-3{display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:8px;align-items:end}
+.ticketed-fields{background:rgba(171,152,104,.07);border:.5px solid rgba(171,152,104,.2);border-radius:3px;padding:10px 12px;margin-top:8px;display:none}
+.ticketed-fields.show{display:block}
+.tf-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:8px}
+</style>
+<div class="panel" id="panel-events">
+  <div class="sub-tabs">
+    <div class="sub-tab active" onclick="subNav('ev-month',this)">Monthly View</div>
+    <div class="sub-tab" onclick="subNav('ev-cal',this)">Year Calendar</div>
+    <div class="sub-tab" onclick="subNav('ev-list',this)">Event List</div>
+    <div class="sub-tab" onclick="subNav('ev-gw',this)">GW Schedule</div>
+    <div class="sub-tab" onclick="subNav('ev-weather',this)">Weather Log</div>
+    <div class="sub-tab" onclick="subNav('ev-add',this)">＋ Add Event</div>
+  </div>
+
+  <!-- ── MONTHLY CALENDAR VIEW ── -->
+  <div class="sub-panel active" id="sub-ev-month">
+    <div class="cal-nav">
+      <button class="cal-nav-btn" onclick="calPrev()">◀</button>
+      <div class="cal-month-title" id="calMonthTitle"></div>
+      <button class="cal-nav-btn" onclick="calNext()">▶</button>
+    </div>
+    <div class="legend" style="margin-bottom:10px">
+      <div class="leg-i"><div class="leg-d" style="background:var(--gold)"></div>WM Hosted Event</div>
+      <div class="leg-i"><div class="leg-d" style="background:var(--blue)"></div>City / External Event</div>
+      <div class="leg-i"><div class="leg-d" style="background:var(--green)"></div>GW In Session</div>
+      <div class="leg-i"><div class="leg-d" style="background:var(--red)"></div>GW Break</div>
+    </div>
+    <div class="cal-grid" id="calDowHeaders"></div>
+    <div class="cal-grid" id="calDayGrid"></div>
+    <p class="src">Events shown are from the event list. Weather icons appear when a daily weather entry exists. Use the Weather Log tab to add daily weather.</p>
+  </div>
+
+  <!-- ── YEAR CALENDAR VIEW ── -->
+  <div class="sub-panel" id="sub-ev-cal">
+    <div class="legend">
+      <div class="leg-i"><div class="leg-d" style="background:var(--gold)"></div>WM Hosted Event</div>
+      <div class="leg-i"><div class="leg-d" style="background:var(--blue)"></div>City / External Event</div>
+      <div class="leg-i"><div class="leg-d" style="background:var(--green)"></div>GW In Session</div>
+      <div class="leg-i"><div class="leg-d" style="background:var(--red)"></div>GW Break / Low Traffic</div>
+    </div>
+    <div id="year-grid"></div>
+  </div>
+
+  <!-- ── EVENT LIST ── -->
+  <div class="sub-panel" id="sub-ev-list">
+    <div class="grid2">
+      <div class="card"><div class="card-title">WM Hosted Events</div><div id="list-wm"></div></div>
+      <div class="card"><div class="card-title">City & External Events</div><div id="list-city"></div></div>
+    </div>
+  </div>
+
+  <!-- ── GW SCHEDULE ── -->
+  <div class="sub-panel" id="sub-ev-gw">
+    <div class="metrics m3" style="margin-bottom:14px">
+      <div class="metric" style="border-top-color:var(--green)"><div class="metric-lbl">Spring semester</div><div class="metric-val" style="font-size:16px">Jan 13 – May 9</div><div class="metric-delta neu">~17 weeks · high traffic Mon–Thu</div></div>
+      <div class="metric" style="border-top-color:var(--green)"><div class="metric-lbl">Fall semester</div><div class="metric-val" style="font-size:16px">Aug 26 – Dec 12</div><div class="metric-delta neu">~16 weeks · high traffic Mon–Thu</div></div>
+      <div class="metric" style="border-top-color:var(--red)"><div class="metric-lbl">Summer low period</div><div class="metric-val" style="font-size:16px">May – Aug</div><div class="metric-delta down">Weekday traffic ~40–50% lower</div></div>
+    </div>
+    <div class="grid2">
+      <div>
+        <div class="sem-block"><div class="sem-nm">SPRING 2026</div>
+          <div class="sem-row"><div class="sem-l">Classes begin</div><div class="sem-v">January 13</div><div class="sem-imp">Traffic ramps up</div></div>
+          <div class="sem-row"><div class="sem-l">MLK Day</div><div class="sem-v">January 19</div><div class="sem-imp">Slight dip</div></div>
+          <div class="sem-row"><div class="sem-l">Spring break</div><div class="sem-v">March 16–22</div><div class="sem-imp" style="color:#e07060">Expect ~30% traffic drop</div></div>
+          <div class="sem-row"><div class="sem-l">Last day of classes</div><div class="sem-v">May 1</div><div class="sem-imp" style="color:#e07060">Traffic drops sharply</div></div>
+          <div class="sem-row"><div class="sem-l">Finals week</div><div class="sem-v">May 4–9</div><div class="sem-imp">Some study traffic</div></div>
+          <div class="sem-row"><div class="sem-l">Commencement</div><div class="sem-v">May 17</div><div class="sem-imp">Family visit spike</div></div>
+        </div>
+        <div class="sem-block"><div class="sem-nm">SUMMER 2026 · GW EVENTS</div>
+          <div class="sem-row"><div class="sem-l">Summer Session I</div><div class="sem-v">May 26 – July 3</div><div class="sem-imp">Reduced campus activity</div></div>
+          <div class="sem-row"><div class="sem-l">Summer Session II</div><div class="sem-v">July 7 – Aug 14</div><div class="sem-imp">Reduced campus activity</div></div>
+          <div class="sem-row"><div class="sem-l">New Student Orientation</div><div class="sem-v">Aug 22–25</div><div class="sem-imp">Family visit spike</div></div>
+        </div>
+      </div>
+      <div>
+        <div class="sem-block"><div class="sem-nm">FALL 2026</div>
+          <div class="sem-row"><div class="sem-l">Move-in / orientation</div><div class="sem-v">Aug 22–25</div><div class="sem-imp">Family visit spike</div></div>
+          <div class="sem-row"><div class="sem-l">Classes begin</div><div class="sem-v">August 26</div><div class="sem-imp">Traffic ramps up</div></div>
+          <div class="sem-row"><div class="sem-l">Labor Day</div><div class="sem-v">September 7</div><div class="sem-imp">Slight dip</div></div>
+          <div class="sem-row"><div class="sem-l">Fall break</div><div class="sem-v">Oct 17–20</div><div class="sem-imp" style="color:#e07060">Short traffic dip</div></div>
+          <div class="sem-row"><div class="sem-l">Thanksgiving break</div><div class="sem-v">Nov 25–29</div><div class="sem-imp" style="color:#e07060">Significant drop</div></div>
+          <div class="sem-row"><div class="sem-l">Last day of classes</div><div class="sem-v">December 5</div><div class="sem-imp" style="color:#e07060">Traffic drops sharply</div></div>
+          <div class="sem-row"><div class="sem-l">Finals week</div><div class="sem-v">Dec 7–12</div><div class="sem-imp">Some study traffic</div></div>
+        </div>
+        <div style="font-size:11px;color:var(--muted);line-height:1.7;padding:10px 0"><span style="color:var(--gold2);font-weight:600">Why this matters:</span> GW students and staff are a significant portion of weekday lunch traffic. The Fyma office data (Mon–Thu peaks) aligns directly with the academic calendar. Correlating monthly sales against in-session vs. break periods helps ownership understand baseline vs. peak revenue.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── WEATHER LOG ── -->
+  <div class="sub-panel" id="sub-ev-weather">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+      <div>
+        <div class="sec-label" style="margin:0">Weather & Foot Traffic Log — March 2026</div>
+        <div style="font-size:10px;color:var(--muted);margin-top:3px">Weather auto-loaded from Open-Meteo (Washington DC) · Fyma daily totals entered manually until export available</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <div id="wxStatusBadge" style="font-size:10px;padding:3px 10px;border-radius:3px;background:rgba(255,255,255,.05);color:var(--muted);border:.5px solid var(--border)">Loading weather…</div>
+        <button class="add-btn" style="font-size:11px;padding:5px 12px" onclick="fetchWeather()">↻ Refresh</button>
+      </div>
+    </div>
+    <div class="metrics m4" style="margin-bottom:14px">
+      <div class="metric"><div class="metric-lbl">Avg high temp</div><div class="metric-val" id="wxAvgHigh">—</div><div class="metric-delta neu">March 2026</div></div>
+      <div class="metric"><div class="metric-lbl">Rain days</div><div class="metric-val" id="wxRainDays">—</div><div class="metric-delta neu">Precip &gt; 0.1"</div></div>
+      <div class="metric"><div class="metric-lbl">Snow / freeze days</div><div class="metric-val" id="wxSnowDays">—</div><div class="metric-delta neu">Snow or below 32°F</div></div>
+      <div class="metric"><div class="metric-lbl">Fyma entries logged</div><div class="metric-val" id="wxFymaCount">—</div><div class="metric-delta neu">Of 31 days</div></div>
+    </div>
+    <div class="add-form" style="margin-bottom:14px">
+      <div style="font-size:10px;color:var(--gold);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Add / edit daily Fyma foot traffic + notes</div>
+      <div style="display:grid;grid-template-columns:100px 130px 1fr auto;gap:8px;align-items:end">
+        <div class="form-grp"><label class="form-lbl">Date</label><input class="form-inp" id="wxFymaDate" placeholder="e.g. Mar 5"></div>
+        <div class="form-grp"><label class="form-lbl">Total visitors (all entries)</label><input class="form-inp" id="wxFymaCount2" type="number" placeholder="e.g. 14820"></div>
+        <div class="form-grp"><label class="form-lbl">Context note (optional)</label><input class="form-inp" id="wxFymaNote" placeholder="e.g. Tour group visit · St. Patrick's Day · Spring break begins"></div>
+        <button class="add-btn" onclick="addFymaEntry()">Save</button>
+      </div>
+      <div style="font-size:10px;color:var(--muted);margin-top:6px">When you receive the Fyma daily export, you can enter all 31 days at once. Until then, log notable days manually.</div>
+    </div>
+    <div class="card" style="padding:0;overflow:hidden;margin-bottom:14px">
+      <table class="wx-table" id="wxMainTable">
+        <thead>
+          <tr>
+            <th style="width:48px">Date</th>
+            <th style="width:28px">Day</th>
+            <th>Conditions</th>
+            <th class="r">High</th>
+            <th class="r">Low</th>
+            <th class="r">Precip</th>
+            <th class="r" style="color:#5aaad9">Fyma Visitors</th>
+            <th>Context / Notes</th>
+            <th style="width:28px"></th>
+          </tr>
+        </thead>
+        <tbody id="wxTableBody"></tbody>
+      </table>
+    </div>
+    <div class="grid3" style="margin-bottom:0">
+      <div class="obs-card"><div class="obs-title">How to use this table</div><div class="obs-body">Sort by rain days or cold snaps and compare to Fyma visitor counts. A sharp dip on a rainy Tuesday helps ownership understand why that week's sales were below trend.</div></div>
+      <div class="obs-card"><div class="obs-title">Fyma daily export</div><div class="obs-body">Once you have a Fyma daily breakdown CSV, upload it and all 31 visitor counts will populate automatically. Until then, log key days (tour group dates, event days, weather anomalies) manually above.</div></div>
+      <div class="obs-card"><div class="obs-title">Weather source</div><div class="obs-body">Temperature and precipitation data auto-fetched from Open-Meteo — free, no API key needed, historical data available back to 1940. Washington DC coordinates (38.9°N, 77.0°W) used for all lookups.</div></div>
+    </div>
+    <p class="src" style="margin-top:10px">Weather: Open-Meteo API · Washington DC (38.9°N, 77.0°W) · Foot traffic: Fyma monthly report (manual entry until daily CSV available)</p>
+  </div>
+
+  <!-- ── ADD EVENT ── -->
+  <div class="sub-panel" id="sub-ev-add">
+    <div class="add-form">
+      <div class="form-row-3">
+        <div class="form-grp"><label class="form-lbl">Event Name</label><input class="form-inp" id="newName" placeholder="e.g. Bollywood Workout Class"></div>
+        <div class="form-grp"><label class="form-lbl">Date(s)</label><input class="form-inp" id="newDate" placeholder="e.g. Apr 2–13"></div>
+        <div class="form-grp"><label class="form-lbl">Month</label>
+          <select class="form-sel" id="newMonth"><option value="">— select —</option><option>Jan</option><option>Feb</option><option>Mar</option><option>Apr</option><option>May</option><option>Jun</option><option>Jul</option><option>Aug</option><option>Sep</option><option>Oct</option><option>Nov</option><option>Dec</option></select>
+        </div>
+        <button class="add-btn" onclick="addEvent()">Add</button>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:8px">
+        <div class="form-grp"><label class="form-lbl">Type</label>
+          <select class="form-sel" id="newType" onchange="toggleTicketed()"><option value="wm">WM Hosted Event</option><option value="city">City / External Event</option></select>
+        </div>
+        <div class="form-grp"><label class="form-lbl">RSVP / Expected attendance</label><input class="form-inp" id="newRsvp" placeholder="e.g. 120 RSVPs"></div>
+        <div class="form-grp"><label class="form-lbl">Notes (optional)</label><input class="form-inp" id="newNote" placeholder="e.g. Recurring · expect +20% foot traffic"></div>
+      </div>
+      <div style="margin-top:8px">
+        <label style="display:flex;align-items:center;gap:8px;font-size:11px;color:var(--muted);cursor:pointer">
+          <input type="checkbox" id="newTicketed" onchange="toggleTicketed()" style="accent-color:var(--gold)">
+          This is a ticketed event (we receive a revenue share from ticket sales)
+        </label>
+      </div>
+      <div class="ticketed-fields" id="ticketedFields">
+        <div style="font-size:10px;color:var(--gold);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Ticketed event details — update after report received</div>
+        <div class="tf-grid">
+          <div class="form-grp"><label class="form-lbl">Total tickets sold</label><input class="form-inp" id="newTicketCount" placeholder="e.g. 85" type="number"></div>
+          <div class="form-grp"><label class="form-lbl">Total ticket revenue ($)</label><input class="form-inp" id="newTicketRev" placeholder="e.g. 2550.00" type="number"></div>
+          <div class="form-grp"><label class="form-lbl">WM revenue share ($)</label><input class="form-inp" id="newTicketShare" placeholder="e.g. 510.00" type="number"></div>
+        </div>
+      </div>
+    </div>
+    <div class="card" style="margin-top:4px"><div id="add-preview"></div></div>
+  </div>
+</div>
+
+<script>
+// ══ DATA ══════════════════════════════════════════════════════════════════════
+const MOS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const SHORT = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+// ── 2025 DATA (full year, ordered by stall) ───────────────────────────────────
+const wmTenants2025=[
+  {loc:'FH 1', name:'Bandoola Bowl',   m:[40344.78,44226.01,65689.26,68008.16,61104.43,63089.29,62563.58,55443.75,62192.97,64449.33,43383.45,28458.21], thr:1000000,  sh:.10, type:'active'},
+  {loc:'FH 2', name:'Onkei',           m:[100710.30,109192.66,122528.08,121690.08,90098.62,71653.50,70286.59,95616.43,124807.11,132137.85,92136.20,74186.97], thr:1215549.50, sh:.10, type:'active'},
+  {loc:'FH 3', name:"GiGi's Pasta",   m:[0,0,0,0,0,0,0,0,0,4565.40,195736.62,182100.33], thr:1000000, sh:.09, type:'active', note:'Opened Nov 2025'},
+  {loc:'FH 4', name:'Maltiox',         m:[0,0,0,0,0,0,0,13097.39,15202.90,0,0,0], thr:1000000, sh:.06, type:'vacated', note:'Vacated 2025'},
+  {loc:'FH 5', name:"Mason's Lobster", m:[31392.46,36653.34,65347.58,60055.90,57702.68,53490.78,49197.13,47804.70,49304.66,55552.52,38492.99,31512.13], thr:734313, sh:.10, type:'active'},
+  {loc:'FH 6', name:'Roaming Rooster', m:[80301.25,91645.51,111597.65,115787.51,107636.83,103669.27,100012.02,88730.38,86914.47,102871.81,76973.51,69378.57], thr:763848, sh:.10, type:'active'},
+  {loc:'FH 7', name:'Capo Deli',       m:[47675.09,53940.94,67589.66,70861.91,59302.85,46742.23,48210.82,52832.64,63357.71,69189.51,52525.95,42542.58], thr:572886,  sh:.10, type:'active'},
+  {loc:'FH 8', name:'Taco Cat',        m:[0,0,0,0,0,0,9262.50,15749.50,15666.95,15442.32,12453.36,9699.02], thr:1500000, sh:.09, type:'vacated', note:'Vacated 2025'},
+  {loc:'FH 9', name:'Alitiko',         m:[39832.85,44358.15,58744.10,59374.15,52065.95,49198.05,48224.15,50970.95,57209.15,62156.98,41241.37,29756.30], thr:1200000, sh:.10, type:'active'},
+  {loc:'FH 10',name:'Falafel Inc.',    m:[0,0,134090.43,0,0,159109.82,0,0,171090.26,0,0,155981.73], thr:1200000, sh:.06, type:'active', note:'Quarterly GSR'},
+  {loc:'FH 11',name:'Arepa Zone',      m:[85365,89721,110187,117582,104373,98722,85529,87652,87569,80452,77857,66748], thr:850000, sh:.09, type:'active'},
+  {loc:'FH 12',name:'Greenheart',      m:[14833.80,18759.90,33205.78,33544.30,29143.55,28586.40,29432.80,18496,14,0,0,0], thr:800000, sh:.10, type:'active', note:'Closed mid-2025'},
+  {loc:'FH 13',name:'Bullfrog Bagels', m:[104077.65,115474.23,125784,125944.52,111027.09,95302.72,100066.71,102753.45,118635.22,126701,104569.86,94151.05], thr:618000, sh:.06, type:'active'},
+  {loc:'FH 14',name:"Andy's Pizza",    m:[242391.19,246450.80,306173.48,302588.55,290132.88,290540.99,275596.16,273753.43,267872.07,309252.53,244911.20,220538.66], thr:2800000, sh:.10, type:'active'},
+  {loc:'FH 15',name:'Vacant (CC)',     m:[0,0,0,0,0,0,0,0,0,0,0,0], thr:1400000, sh:.06, type:'vacant', note:'Former CC stall — see 20402'},
+  {loc:'FH 16',name:'Tiger Sugar',     m:[13508.78,15122.77,26395.78,23696.46,21993.29,20497.20,20488.70,17813.56,17480.35,19716.29,13860.56,8793.67], thr:816000, sh:.10, type:'active'},
+  {loc:'FH 17',name:'Vacant',          m:[0,0,0,0,0,0,0,0,0,0,0,0], thr:null, sh:null, type:'vacant', note:'Next to Maman'},
+  {loc:'20402',name:'Captain Cookie',  m:[19717,29051,50575,49257.28,41619,39916,55030,31392,33878,32323,20307.20,16225.13], thr:2479500, sh:.06, type:'active', note:'Moved from FH15 end of 2024'},
+  {loc:'LL02', name:'EXPAT',           m:[9628,5767,13755,2599,3805,0,0,0,0,0,0,0], thr:5416667, sh:.09, type:'vacated', note:'Vacated mid-2025'},
+  {loc:'Pop-Up 1',name:'D/Lai',        m:[0,1784,6455.50,10508.18,13178,17536.26,18808.91,18123.15,15633.61,16079.72,13447.83,4768.10], thr:null, sh:null, type:'popup'},
+  {loc:'Pop-Up 2',name:"Lou's Buns",   m:[0,0,0,0,0,5124.60,1863.50,1408.44,3734,4904,4884.60,2115.46], thr:null, sh:null, type:'popup'},
+  {loc:'Pop-Up 3',name:'LitBox',       m:[0,0,0,0,0,1489.78,662.68,582.22,369.16,942.40,530.39,320.68], thr:null, sh:null, type:'popup'},
+];
+const pennTenants2025=[
+  {loc:'M10',   name:'Bindaas',        m:[110828.55,124434.96,182601.69,179698.07,163159.17,140769.31,120619.95,117377.75,123098.37,152270.69,111965.75,72999.10], thr:690845, sh:.06, type:'active'},
+  {loc:'M003A', name:"Duke's Grocery", m:[189752.18,200372.52,291665.28,275204.25,267398.14,228160.58,219592.68,209089.38,199324.25,266368.40,180156.11,200156.31], thr:4751137, sh:.06, type:'active'},
+  {loc:'M011',  name:'Maman',          m:[85220.78,173791.10,217596.15,241419.23,213113.04,198252.48,198577.27,209851.35,227402.67,284480.78,207538.02,158548.72], thr:2479500, sh:.07, type:'active'},
+];
+const totalSales2025=[1215579.66,1400745.89,1989981.42,1857819.55,1686853.52,1711851.26,1514025.15,1508538.47,1740756.88,1799856.53,1532971.97,1468980.72];
+
+// ── 2026 DATA (live from sheet via Apps Script) ───────────────────────────────
+const wmTenants2026=[
+  {loc:'FH 1', name:'Bandoola Bowl',   m:[33075.20,42024.09,58315.70,62760.03,0,0,0,0,0,0,0,0], thr:1000000,  sh:.10, type:'active'},
+  {loc:'FH 2', name:'Onkei',           m:[84537.29,99966.50,118813.06,121404.75,0,0,0,0,0,0,0,0], thr:1215549.50, sh:.10, type:'active'},
+  {loc:'FH 3', name:"GiGi's Pasta",   m:[178135.12,188397.16,225576.67,222944.27,0,0,0,0,0,0,0,0], thr:1000000, sh:.09, type:'active'},
+  {loc:'FH 4', name:'Vacant (Maltiox)',m:[0,0,0,0,0,0,0,0,0,0,0,0], thr:1000000, sh:.06, type:'vacant', note:'Former Maltiox'},
+  {loc:'FH 5', name:"Mason's Lobster", m:[26522.20,35080.70,59427.69,63278.70,0,0,0,0,0,0,0,0], thr:734313, sh:.10, type:'active'},
+  {loc:'FH 6', name:'Roaming Rooster', m:[60254.32,64931.07,86049.16,95773.65,0,0,0,0,0,0,0,0], thr:763848, sh:.10, type:'active'},
+  {loc:'FH 7', name:'Capo Deli',       m:[43576.03,50941.13,64853.41,67604.34,0,0,0,0,0,0,0,0], thr:572886,  sh:.10, type:'active'},
+  {loc:'FH 8', name:'Taco Cat',        m:[6749.89,-22,21.28,16.80,0,0,0,0,0,0,0,0], thr:1500000, sh:.09, type:'vacated', note:'Effectively closed'},
+  {loc:'FH 9', name:'Alitiko',         m:[32236.60,38136.95,48464.20,51907.10,0,0,0,0,0,0,0,0], thr:1200000, sh:.10, type:'active'},
+  {loc:'FH 10',name:'Falafel Inc.',    m:[0,0,129559.67,0,0,0,0,0,0,0,0,0], thr:1200000, sh:.06, type:'active', note:'Quarterly GSR'},
+  {loc:'FH 11',name:'Arepa Zone',      m:[61678,68840,91067,0,0,0,0,0,0,0,0,0], thr:850000, sh:.09, type:'active'},
+  {loc:'FH 12',name:'Southblock',      m:[0,0,53003.91,114642.99,0,0,0,0,0,0,0,0], thr:800000, sh:.10, type:'active', note:'Opened Mar 14, 2026'},
+  {loc:'FH 13',name:'Bullfrog Bagels', m:[82080.49,101147.14,121416.38,130747.12,0,0,0,0,0,0,0,0], thr:618000, sh:.06, type:'active'},
+  {loc:'FH 14',name:"Andy's Pizza",    m:[202939.75,250866.99,304481.64,0,0,0,0,0,0,0,0,0], thr:2800000, sh:.10, type:'active'},
+  {loc:'FH 15',name:'Vacant (CC)',     m:[0,0,0,0,0,0,0,0,0,0,0,0], thr:1400000, sh:.06, type:'vacant', note:'Former CC stall — see 20402'},
+  {loc:'FH 16',name:'Tiger Sugar',     m:[8238.11,0,0,0,0,0,0,0,0,0,0,0], thr:816000, sh:.10, type:'vacated', note:'Vacated Jan 2026'},
+  {loc:'FH 17',name:'Mondepice',       m:[0,0,6431,12310.72,0,0,0,0,0,0,0,0], thr:null, sh:null, type:'popup', note:'Opened Mar 20, 2026'},
+  {loc:'20402',name:'Captain Cookie',  m:[12724.30,21995.31,31640.51,0,0,0,0,0,0,0,0,0], thr:2479500, sh:.06, type:'active', note:'Moved from FH15 end of 2024'},
+  {loc:'LL02', name:'Vacant (EXPAT)',  m:[0,0,0,0,0,0,0,0,0,0,0,0], thr:5416667, sh:.09, type:'vacant', note:'EXPAT vacated 2025'},
+  {loc:'Pop-Up 1',name:'D/Lai',        m:[6832.06,12830.98,36281.39,47584.49,0,0,0,0,0,0,0,0], thr:null, sh:null, type:'popup'},
+  {loc:'Pop-Up 2',name:'',             m:[0,0,0,0,0,0,0,0,0,0,0,0], thr:null, sh:null, type:'popup'},
+  {loc:'Pop-Up 3',name:'LitBox',       m:[275.87,473.70,555.76,432.48,0,0,0,0,0,0,0,0], thr:null, sh:null, type:'popup'},
+];
+const pennTenants2026=[
+  {loc:'M10',   name:'Bindaas',        m:[3376.05,42468.75,84536.66,90592.79,0,0,0,0,0,0,0,0], thr:690845, sh:.06, type:'active'},
+  {loc:'M003A', name:"Duke's Grocery", m:[172723.52,201759.30,282253.63,0,0,0,0,0,0,0,0,0], thr:4751137, sh:.06, type:'active'},
+  {loc:'M011',  name:'Maman',          m:[158913.79,190952.99,246712.99,268978.78,0,0,0,0,0,0,0,0], thr:2479500, sh:.07, type:'active'},
+];
+const totalSales2026=[1174868.59,1410790.76,2049461.71,1350979.01,0,0,0,0,0,0,0,0];
+
+// ── 2026 QUARTERLY DATA (live from Apps Script) ───────────────────────────────
+let qtrly2026wm   = [];
+let qtrly2026penn = [];
+
+// ── 2024 DATA (full year, ordered by stall) ───────────────────────────────────
+const wmTenants2024=[
+  {loc:'FH 1', name:'Bandoola Bowl',   m:[41556.90,48912.41,57694.07,65037.59,63592.53,59721.97,55863.77,61223.56,59246.63,65740.06,44352.71,30737.24], thr:1000000,  sh:.10, type:'active'},
+  {loc:'FH 2', name:'Onkei',           m:[87313.74,104999.83,116930.35,122298.12,92494.04,82927.26,68599.85,105754.39,133939.88,140817.23,100318.61,83275.82], thr:1180145, sh:.10, type:'active'},
+  {loc:'FH 3', name:'Bussdown',        m:[19589.95,22961.20,24509.50,23530.20,21124.25,23276.22,21902.07,19250.16,20364.98,16697.86,7776.55,1900.62], thr:865200, sh:0, type:'vacated', note:'Vacated 2024'},
+  {loc:'FH 4', name:'Nim Ali',         m:[39219.69,41570.97,64074.03,57864.05,0,0,0,0,0,0,0,0], thr:1000000, sh:.06, type:'vacated', note:'Vacated mid-2024'},
+  {loc:'FH 5', name:"Mason's Lobster", m:[35727.75,43636.87,64855.32,66660.53,62200.64,54342.81,55797.89,57763.23,47959.77,58598.65,40617.65,34247.06], thr:734313, sh:.10, type:'active'},
+  {loc:'FH 6', name:'Roaming Rooster', m:[92688.08,103983.42,113506.23,110139.73,114446.30,110786.67,97515.40,100202.92,100877.89,115079.54,87457.57,77983.35], thr:763848, sh:.10, type:'active'},
+  {loc:'FH 7', name:'Capo Deli',       m:[41134.01,49729.80,51914.55,58124.10,50560.87,43468.42,41202.66,52846.21,60887.68,69321.42,52499.79,44273.06], thr:572886,  sh:.10, type:'active'},
+  {loc:'FH 8', name:'Hippo Taco',      m:[0,0,0,0,0,0,0,0,0,0,0,0], thr:1500000, sh:.09, type:'vacant', note:'Never opened'},
+  {loc:'FH 9', name:'Alitiko',         m:[35727.75,39413.55,42167.55,50503.50,42474.70,33908.75,33459.45,44899.05,54173.05,62834.80,43550.05,35265.00], thr:1200000, sh:.10, type:'active'},
+  {loc:'FH 10',name:'Falafel Inc.',    m:[0,0,101191.26,0,0,139639.20,0,0,147169.51,0,0,120984.65], thr:1200000, sh:.06, type:'active', note:'Quarterly GSR'},
+  {loc:'FH 11',name:'Arepa Zone',      m:[69911.06,80688.63,117570.27,103598.21,111026.23,97119.66,78803.73,102805,102596,111920.41,97743.29,89840.44], thr:850000, sh:.09, type:'active'},
+  {loc:'FH 12',name:'Greenheart',      m:[0,0,0,0,0,3969.30,36615.67,38766.32,35806.99,32372.05,19918.73,14450.85], thr:800000, sh:.10, type:'active', note:'Opened Jun 28, 2024'},
+  {loc:'FH 13',name:'Bullfrog Bagels', m:[102983.26,116041.11,131448.96,137002,122406.43,108320.38,106434.44,110768.64,125455.08,136334.55,118857.97,112222.81], thr:618000, sh:.06, type:'active'},
+  {loc:'FH 14',name:"Andy's Pizza",    m:[165236.15,211822.96,249352.63,233875.97,213531.89,204123.41,209947.98,215362.74,234644.32,269236.88,251910.90,230389.73], thr:2800000, sh:.10, type:'active'},
+  {loc:'FH 15',name:'Captain Cookie',  m:[16951.80,29581.67,53728.89,45705.22,39992.06,46361.80,43101.15,36613.70,36842.85,36792.25,28600,21541], thr:1400000, sh:.06, type:'active', note:'Moved to 20402 end of 2024'},
+  {loc:'FH 16',name:'Tiger Sugar',     m:[0,0,0,0,0,0,4909.04,21459.14,20573.83,19364.63,15600.68,10484.49], thr:816000, sh:.10, type:'active', note:'Opened Jul 2024'},
+  {loc:'FH 17',name:'Vacant',          m:[0,0,0,0,0,0,0,0,0,0,0,0], thr:null, sh:null, type:'vacant', note:'Next to Maman'},
+  {loc:'LL02', name:'EXPAT',           m:[0,0,29093.19,63710.89,35297.76,34227.30,44750.95,17446.20,21254.30,18385.89,37616,20579], thr:5416667, sh:.09, type:'active', note:'Opened Mar 2024'},
+  {loc:'Pop-Up 1',name:'Paris Love/Tabla',m:[0,0,0,0,0,3816,3884,4848,4062,6636.02,959.38,139], thr:null, sh:null, type:'popup'},
+];
+const pennTenants2024=[
+  {loc:'20402', name:'Vacant (Future CC)',m:[0,0,0,0,0,0,0,0,0,0,0,0], thr:2479500, sh:.06, type:'vacant', note:'Prepped for Captain Cookie'},
+  {loc:'M10',   name:'Bindaas',           m:[141143.11,163162.05,264387.93,250383.97,260764.44,208177.80,185941.80,183690.99,165252.50,209531.83,161961.40,154683.24], thr:690845, sh:.06, type:'active'},
+  {loc:'M003A', name:"Duke's Grocery",    m:[245251.51,275671.97,358391.33,327817.90,332475.79,283318.26,249574.45,232574.45,215008.29,268115.16,194064.70,220414.78], thr:4751137, sh:.06, type:'active'},
+  {loc:'M011',  name:"Paul's Bakery",     m:[100913.81,112507.19,0,0,0,0,0,0,0,0,0,0], thr:2479500, sh:.06, type:'vacated', note:'Replaced by Maman'},
+];
+const totalSales2024=[1235348.57,1444683.63,1840816.06,1716251.98,1562387.93,1537505.21,1338304.30,1406274.70,1586115.55,1637779.23,1303805.98,1303412.14];
+
+
+// ── Active year state ─────────────────────────────────────────────────────────
+const YEAR_DATA={
+  2024:{wm:wmTenants2024,penn:pennTenants2024,total:totalSales2024},
+  2025:{wm:wmTenants2025,penn:pennTenants2025,total:totalSales2025},
+  2026:{wm:wmTenants2026,penn:pennTenants2026,total:totalSales2026},
+};
+let selYear=2026;
+let selMonth=null;
+
+function getWm(){return YEAR_DATA[selYear].wm;}
+function getPenn(){return YEAR_DATA[selYear].penn;}
+function getTotalSales(){return YEAR_DATA[selYear].total;}
+
+function ann(t){return t.m.reduce((s,v)=>s+v,0);}
+function mTot(arr,i){return arr.reduce((s,t)=>s+(t.m[i]||0),0);}
+function fmt(n){return n===0?'—':'$'+Math.round(n).toLocaleString();}
+
+// ══ NAVIGATION ════════════════════════════════════════════════════════════════
+function nav(id, el){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('panel-'+id).classList.add('active');
+  el.classList.add('active');
+}
+function subNav(id, el){
+  const parent = el.closest('.panel');
+  parent.querySelectorAll('.sub-panel').forEach(p=>p.classList.remove('active'));
+  parent.querySelectorAll('.sub-tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('sub-'+id).classList.add('active');
+  el.classList.add('active');
+}
+
+// ══ OVERVIEW MOM (always shows 2025 full year) ════════════════════════════════
+function renderOvMom(){
+  const ts=totalSales2025;
+  document.getElementById('ov-mom').innerHTML = SHORT.map((m,i)=>{
+    if(i===0) return `<div class="mom-cell"><div class="mom-mo">${m}</div><div class="mom-v neu" style="font-size:9px;color:var(--muted)">base</div></div>`;
+    const p=((ts[i]-ts[i-1])/ts[i-1]*100);
+    return `<div class="mom-cell" onclick="document.querySelectorAll('.nav-btn')[1].click();setTimeout(()=>{document.querySelectorAll('.m-btn')[${i+3}].click()},50)"><div class="mom-mo">${m}</div><div class="mom-v" style="color:${p>=0?'var(--green)':'var(--red)'}">${p>=0?'▲':'▼'}${Math.abs(p).toFixed(1)}%</div></div>`;
+  }).join('');
+}
+
+// ══ SALES ═════════════════════════════════════════════════════════════════════
+function renderSalesNav(){
+  const nav = document.getElementById('sales-month-nav');
+  nav.innerHTML = '<span style="font-size:12px;font-weight:700;color:var(--muted);letter-spacing:.08em;margin-right:8px;align-self:center">VIEW:</span>';
+
+  // Year buttons
+  [2026,2025,2024].forEach(yr=>{
+    const b=document.createElement('button');
+    b.className='m-btn'+(selYear===yr?' active':'');
+    b.textContent=yr;
+    b.onclick=()=>{selYear=yr;selMonth=null;renderSales();};
+    nav.appendChild(b);
+  });
+
+  // Divider
+  const div=document.createElement('span');
+  div.style.cssText='width:1px;height:18px;background:var(--border);margin:0 6px;align-self:center;flex-shrink:0';
+  nav.appendChild(div);
+
+  // Full year button
+  const ab=document.createElement('button');
+  ab.className='m-btn'+(selMonth===null?' active':'');
+  ab.textContent='Full Year';
+  ab.onclick=()=>{selMonth=null;renderSales();};
+  nav.appendChild(ab);
+
+  // Month buttons
+  SHORT.forEach((m,i)=>{
+    const b=document.createElement('button');
+    b.className='m-btn'+(selMonth===i?' active':'');
+    b.textContent=m;
+    b.onclick=()=>{selMonth=i;renderSales();};
+    nav.appendChild(b);
+  });
+}
+
+function renderSalesMom(){
+  document.getElementById('sales-mom-label').textContent=selYear+' — Month-over-month change';
+  const ts=getTotalSales();
+  const hasData=ts.some(v=>v>0);
+
+  // MoM row
+  document.getElementById('sales-mom').innerHTML = SHORT.map((m,i)=>{
+    if(!hasData||ts[i]===0&&ts.slice(0,i).every(v=>v===0)){
+      const sel=selMonth===i?'border-color:var(--border);background:var(--gray3);':'';
+      return `<div class="mom-cell" style="${sel}opacity:.35"><div class="mom-mo">${m}</div><div class="mom-v" style="font-size:9px;color:var(--muted)">—</div></div>`;
+    }
+    if(i===0||ts[i-1]===0) return `<div class="mom-cell"${selMonth===i?' style="border-color:var(--gold);background:var(--gray3);"':''} onclick="selMonth=${i};renderSales()"><div class="mom-mo">${m}</div><div class="mom-v" style="font-size:9px;color:var(--muted)">base</div></div>`;
+    const p=((ts[i]-ts[i-1])/ts[i-1]*100);
+    const sel=selMonth===i?'border-color:var(--gold);background:var(--gray3);':'';
+    return `<div class="mom-cell" style="${sel}" onclick="selMonth=${i};renderSales()"><div class="mom-mo">${m}</div><div class="mom-v" style="color:${p>=0?'var(--green)':'var(--red)'}">${p>=0?'▲':'▼'}${Math.abs(p).toFixed(1)}%</div></div>`;
+  }).join('');
+
+  // YoY row — only render if prior year has data
+  const py = getPriorYear();
+  const yoyEl = document.getElementById('sales-yoy');
+  if(!yoyEl) return;
+  const pts = py ? YEAR_DATA[py].total : null;
+  const hasYoy = pts && pts.some(v=>v>0);
+  if(!hasYoy){ yoyEl.innerHTML=''; document.getElementById('sales-yoy-label').style.display='none'; return; }
+  document.getElementById('sales-yoy-label').style.display='';
+  document.getElementById('sales-yoy-label').textContent=selYear+' vs '+py+' — Year-over-year change';
+  yoyEl.innerHTML = SHORT.map((m,i)=>{
+    if(ts[i]===0||pts[i]===0){
+      return `<div class="mom-cell" style="opacity:.35"><div class="mom-mo">${m}</div><div class="mom-v" style="font-size:9px;color:var(--muted)">—</div></div>`;
+    }
+    const p=((ts[i]-pts[i])/pts[i]*100);
+    return `<div class="mom-cell"><div class="mom-mo">${m}</div><div class="mom-v" style="color:${p>=0?'var(--green)':'var(--red)'}">${p>=0?'▲':'▼'}${Math.abs(p).toFixed(1)}%</div></div>`;
+  }).join('');
+}
+
+function renderSalesMetrics(){
+  const mi=selMonth; const isM=mi!==null;
+  const wm=getWm(); const penn=getPenn(); const ts=getTotalSales();
+  const wmT=isM?mTot(wm,mi):wm.reduce((s,t)=>s+ann(t),0);
+  const pT=isM?mTot(penn,mi):penn.reduce((s,t)=>s+ann(t),0);
+  const tot=wmT+pT;
+  const prev=isM&&mi>0?ts[mi-1]:null;
+  const mom=prev&&prev>0&&ts[mi]>0?((ts[mi]-prev)/prev*100):null;
+  const rentHit=[...wm,...penn].filter(t=>t.thr&&t.sh&&ann(t)>t.thr).length;
+  const yr=selYear; const lbl=isM?SHORT[mi]+' '+yr:String(yr);
+  document.getElementById('sales-metrics').innerHTML=[
+    {l:'Total Sales — '+lbl,v:tot>0?'$'+Math.round(tot).toLocaleString():'—',d:mom!==null?(mom>=0?'▲ ':'▼ ')+Math.abs(mom).toFixed(1)+'% vs '+SHORT[mi-1]:null,c:mom===null?'neu':mom>=0?'up':'down'},
+    {l:'WM Food Hall — '+lbl,v:wmT>0?'$'+Math.round(wmT).toLocaleString():'—',d:null,c:'neu'},
+    {l:'2K Penn Retail — '+lbl,v:pT>0?'$'+Math.round(pT).toLocaleString():'—',d:null,c:'neu'},
+    {l:'% Rent Threshold — '+yr,v:rentHit>0?rentHit+' tenants':'—',d:'Of tenants with threshold',c:'neu'},
+  ].map(x=>`<div class="metric"><div class="metric-lbl">${x.l}</div><div class="metric-val">${x.v}</div>${x.d?`<div class="metric-delta ${x.c}">${x.d}</div>`:''}</div>`).join('');
+}
+
+// ── YoY helpers ───────────────────────────────────────────────────────────────
+function getPriorYear(){ return selYear===2026?2025:selYear===2025?2024:null; }
+function getPriorRoster(isWm){
+  const py=getPriorYear(); if(!py) return [];
+  return isWm?YEAR_DATA[py].wm:YEAR_DATA[py].penn;
+}
+function getPriorTenant(t, priorRoster){
+  return priorRoster.find(p=>p.name===t.name)||null;
+}
+
+// ── Top-performer detection ───────────────────────────────────────────────────
+function getTopPerformers(allTenants, mi){
+  const active=allTenants.filter(t=>t.type!=='vacant'&&t.type!=='popup'&&t.type!=='vacated');
+  const vals=active.map(t=>({t, v:mi!==null?(t.m[mi]||0):ann(t)})).filter(x=>x.v>0);
+  if(!vals.length) return {topSales:null};
+  vals.sort((a,b)=>b.v-a.v);
+  return {topSales: vals[0].t.name};
+}
+
+function tenantRow(t, mi, priorRoster, topSalesName){
+  const isM = mi!==null;
+  const val  = isM ? (t.m[mi]||0) : ann(t);
+
+  // MoM delta (monthly view only)
+  const prevMo = isM && mi>0 ? (t.m[mi-1]||0) : null;
+  const momDelta = prevMo!==null && prevMo>0 && val>0 ? ((val-prevMo)/prevMo*100) : null;
+
+  // YoY delta — compare same month or full year to prior year
+  const pt = getPriorTenant(t, priorRoster);
+  const priorVal = pt ? (isM ? (pt.m[mi]||0) : ann(pt)) : null;
+  const yoyDelta = priorVal!==null && priorVal>0 && val>0 ? ((val-priorVal)/priorVal*100) : null;
+
+  // Badges
+  let typeBadge='';
+  if(t.type==='vacant')   typeBadge='<span class="badge b-vac">vacant</span>';
+  else if(t.type==='vacated') typeBadge='<span class="badge b-vac" style="opacity:.6">vacated</span>';
+  else if(t.type==='popup') typeBadge='<span class="badge b-pop">pop-up</span>';
+
+  const isTopSales = t.name===topSalesName && val>0;
+  const topBadge = isTopSales ? '<span class="badge" style="background:rgba(171,152,104,.2);color:var(--gold);border:.5px solid rgba(171,152,104,.5);margin-left:4px">★ #1 sales</span>' : '';
+
+  // Sparkline
+  const maxV = Math.max(...t.m, 1);
+  const spark = '<svg class="spark" viewBox="0 0 60 18">'+
+    t.m.map((v,idx)=>{const h=Math.round((v/maxV)*16);return`<rect x="${idx*5}" y="${18-h}" width="4" height="${h}" fill="${mi===idx?'#ab9868':'#3a3a3a'}" rx="1"/>`;}).join('')+
+    '</svg>';
+
+  const momStr = momDelta!==null
+    ? `<span style="color:${momDelta>=0?'var(--green)':'var(--red)'};font-size:10px;margin-left:5px" title="vs prior month">${momDelta>=0?'▲':'▼'}${Math.abs(momDelta).toFixed(0)}%</span>`
+    : '';
+  const yoyStr = yoyDelta!==null
+    ? `<span style="color:${yoyDelta>=0?'var(--green)':'var(--red)'};font-size:10px;margin-left:4px;opacity:.75" title="vs ${getPriorYear()} same period">YoY ${yoyDelta>=0?'▲':'▼'}${Math.abs(yoyDelta).toFixed(0)}%</span>`
+    : '';
+
+  const annLbl = selYear===2026 ? '2026 YTD' : selYear+' Annual';
+  const locCell = `<td style="font-size:10px;color:var(--muted);white-space:nowrap">${t.loc||''}</td>`;
+
+  return `<tr>
+    ${locCell}
+    <td>${t.name} ${typeBadge}${topBadge}${t.note?`<span style="font-size:10px;color:var(--muted);margin-left:5px">${t.note}</span>`:''}</td>
+    <td class="r">${val>0?fmt(val):'<span style="color:var(--muted)">—</span>'}${momStr}${yoyStr}</td>
+    <td class="r" style="color:var(--muted)">${isM&&ann(t)>0?fmt(ann(t)):isM?'<span style="color:var(--muted)">—</span>':''}</td>
+    <td>${spark}</td>
+  </tr>`;
+}
+
+function renderTable(tenants, tblId, lblId, isWm){
+  const mi = selMonth; const isM = mi!==null;
+  const tot = isM ? mTot(tenants,mi) : tenants.reduce((s,t)=>s+ann(t),0);
+  const annLbl = selYear===2026 ? '2026 YTD' : selYear+' Annual';
+  const colLbl = isM ? SHORT[mi]+' '+selYear+' Sales' : annLbl;
+  const priorRoster = getPriorRoster(isWm);
+
+  // Identify top performers across this table only
+  const {topSales} = getTopPerformers(tenants, mi);
+
+  document.getElementById(lblId).textContent =
+    (tot>0 ? '$'+Math.round(tot).toLocaleString() : 'No data yet') +
+    (isM ? ' — '+SHORT[mi]+' '+selYear : ' — '+selYear);
+
+  const yoyAvail = getPriorYear() && YEAR_DATA[getPriorYear()];
+  const yoyHint  = yoyAvail ? ` · YoY vs ${getPriorYear()}` : '';
+
+  document.getElementById(tblId).innerHTML =
+    `<thead><tr><th style="width:52px">Location</th><th>Tenant</th><th class="r">${colLbl}${isM?' · MoM'+yoyHint:yoyHint}</th><th class="r">${isM?annLbl:''}</th><th>Trend</th></tr></thead><tbody>`+
+    tenants.map(t=>tenantRow(t,mi,priorRoster,topSales)).join('')+
+    `<tr class="t-total"><td></td><td>Subtotal</td><td class="r">${tot>0?'$'+Math.round(tot).toLocaleString():'—'}</td><td class="r"></td><td></td></tr></tbody>`;
+}
+
+function fmtQ(v){
+  if(v===null||v===undefined||v===''||v==='-') return null;
+  const n=parseFloat(String(v).replace(/[$,\s]/g,''));
+  return isNaN(n)?null:n;
+}
+
+function renderRent(){
+  const yr=selYear;
+  const annLbl=yr===2026?yr+' YTD':yr+' Annual';
+  document.getElementById('rent-tracker-label').textContent='% Rent Tracker — '+annLbl;
+
+  if(yr===2026){
+    // ── Quarterly table for 2026 ──────────────────────────────────────────────
+    const allQ=[...qtrly2026wm,...qtrly2026penn];
+    const hasData=allQ.length>0;
+
+    if(!hasData){
+      document.getElementById('rent-table').innerHTML=
+        '<tbody><tr><td colspan="12" style="color:var(--muted);padding:16px 8px;font-size:11px">Loading quarterly data…</td></tr></tbody>';
+      return;
+    }
+
+    const thead='<thead><tr>'+
+      '<th>Tenant</th>'+
+      '<th class="r" style="color:var(--muted)">Q1 Sales</th>'+
+      '<th class="r" style="color:var(--gold2)">Q1 % Rent</th>'+
+      '<th class="r" style="color:var(--muted)">Q2 Sales</th>'+
+      '<th class="r" style="color:var(--gold2)">Q2 % Rent</th>'+
+      '<th class="r" style="color:var(--muted)">Q3 Sales</th>'+
+      '<th class="r" style="color:var(--gold2)">Q3 % Rent</th>'+
+      '<th class="r" style="color:var(--muted)">Q4 Sales</th>'+
+      '<th class="r" style="color:var(--gold2)">Q4 % Rent</th>'+
+      '<th class="r">Total Sales</th>'+
+      '<th class="r" style="color:var(--gold)">YTD % Rent</th>'+
+      '<th class="r" style="color:var(--muted)">Threshold</th>'+
+      '</tr></thead>';
+
+    function divRow(label){
+      return `<tr><td colspan="12" style="background:var(--gray);color:var(--gold);font-family:'Oswald',sans-serif;font-size:10px;letter-spacing:.1em;text-transform:uppercase;padding:6px 8px;border-top:.5px solid var(--gold)">${label}</td></tr>`;
+    }
+
+    function tenantQRow(t){
+      const isVacant=t.vacant;
+      const style=isVacant?'opacity:.4':'';
+      const q=t.q||[null,null,null,null];
+      const r=t.rent||[null,null,null,null];
+      const total=t.total;
+      const ytdRent=r.reduce((s,v)=>s+(v&&!isNaN(v)?v:0),0);
+      const thr=t.threshold;
+
+      function rentCell(v){
+        if(v===null||v===0||v===undefined) return '<span style="color:var(--muted)">—</span>';
+        const fmtd='$'+Math.abs(v).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+        if(v<0) return `<span style="color:var(--red);font-weight:600">-${fmtd}</span>`;
+        return `<span style="color:var(--gold);font-weight:600">${fmtd}</span>`;
+      }
+      function salesCell(v){
+        if(v===null||v===undefined) return '<span style="color:var(--muted)">—</span>';
+        return '$'+v.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+      }
+
+      return `<tr style="${style}">
+        <td>${t.name}${isVacant?` <span class="badge b-vac">vacant</span>`:''}</td>
+        <td class="r">${salesCell(q[0])}</td>
+        <td class="r">${rentCell(r[0])}</td>
+        <td class="r">${salesCell(q[1])}</td>
+        <td class="r">${rentCell(r[1])}</td>
+        <td class="r">${salesCell(q[2])}</td>
+        <td class="r">${rentCell(r[2])}</td>
+        <td class="r">${salesCell(q[3])}</td>
+        <td class="r">${rentCell(r[3])}</td>
+        <td class="r">${salesCell(total)}</td>
+        <td class="r">${rentCell(ytdRent)}</td>
+        <td class="r" style="color:var(--muted)">${thr?'$'+thr.toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:0}):'—'}</td>
+      </tr>`;
+    }
+
+    const tbody='<tbody>'+
+      divRow('Western Market')+
+      qtrly2026wm.map(tenantQRow).join('')+
+      divRow('2000 Penn')+
+      qtrly2026penn.map(tenantQRow).join('')+
+      '</tbody>';
+
+    document.getElementById('rent-table').innerHTML=thead+tbody;
+
+  } else {
+    // ── Simple annual table for 2025 / 2024 ──────────────────────────────────
+    const wm=getWm(); const penn=getPenn();
+    const hasAny=wm.concat(penn).some(t=>ann(t)>0);
+    const all=[...wm,...penn].filter(t=>t.thr&&t.sh&&t.type!=='vacant'&&t.type!=='popup');
+    document.getElementById('rent-table').innerHTML=
+      `<thead><tr><th>Tenant</th><th class="r">${yr} Annual Sales</th><th class="r">Threshold</th><th class="r">Over by</th><th class="r">% Rent Owed</th><th>Status</th></tr></thead><tbody>`+
+      all.map(t=>{
+        const a=ann(t);const over=a-t.thr;const rent=over>0?over*t.sh:0;const prog=Math.min(a/t.thr,1);
+        let badge,cls;
+        if(!hasAny){badge='No data yet';cls='b-no';}
+        else if(rent>0){badge='Hit threshold';cls='b-hit';}
+        else if(prog>.85){badge='Close >85%';cls='b-close';}
+        else{badge='Below threshold';cls='b-no';}
+        return`<tr><td>${t.name}</td><td class="r">${a>0?'$'+Math.round(a).toLocaleString():'<span style="color:var(--muted)">—</span>'}</td><td class="r" style="color:var(--muted)">$${Math.round(t.thr).toLocaleString()}</td><td class="r">${over>0?`<span style="color:var(--green)">+$${Math.round(over).toLocaleString()}</span>`:'—'}</td><td class="r">${rent>0?`<span style="color:var(--gold);font-weight:600">$${Math.round(rent).toLocaleString()}</span>`:'—'}</td><td><span class="badge ${cls}">${badge}</span></td></tr>`;
+      }).join('')+'</tbody>';
+  }
+}
+
+function renderSales(){
+  renderSalesNav();
+  renderSalesMom();
+  renderSalesMetrics();
+  renderTable(getWm(),'wm-table','wm-total-lbl', true);
+  renderTable(getPenn(),'penn-table','penn-total-lbl', false);
+}
+
+// ══ FOOT TRAFFIC ══════════════════════════════════════════════════════════════
+function renderTraffic(){
+  const eD=[320,290,310,370,339,442]; const eM=['Oct','Nov','Dec','Jan','Feb','Mar'];
+  const maxE=Math.max(...eD);
+  document.getElementById('entrance-trend').innerHTML=eD.map((v,i)=>`<div style="flex:1;height:${Math.round((v/maxE)*66)}px;background:${i===5?'var(--gold)':'var(--gray3)'};border-radius:2px 2px 0 0"></div>`).join('');
+  document.getElementById('entrance-months').innerHTML=eM.map(m=>`<div style="flex:1;font-size:9px;color:var(--muted);text-align:center">${m}</div>`).join('');
+  const oD=[38,35,42,43,47]; const oM=['Nov','Dec','Jan','Feb','Mar'];
+  const maxO=Math.max(...oD);
+  document.getElementById('office-trend').innerHTML=oD.map((v,i)=>`<div style="flex:1;height:${Math.round((v/maxO)*66)}px;background:${i===4?'var(--gold)':'var(--gray3)'};border-radius:2px 2px 0 0"></div>`).join('');
+  document.getElementById('office-months').innerHTML=oM.map(m=>`<div style="flex:1;font-size:9px;color:var(--muted);text-align:center">${m}</div>`).join('');
+}
+
+// ══ WEB ═══════════════════════════════════════════════════════════════════════
+function renderWeb(){
+  const compare=[
+    {ch:'Google / organic search',ga:'4,817',sq:'6,302'},
+    {ch:'Direct',ga:'2,732',sq:'—'},
+    {ch:'WiFi portal (wifast)',ga:'856',sq:'949'},
+    {ch:'Bing + other search',ga:'210',sq:'432'},
+    {ch:'Social (Yelp/IG/FB/Reddit)',ga:'~130',sq:'177'},
+    {ch:'Tourism referrals',ga:'18',sq:'42'},
+    {ch:'AI referrals (ChatGPT etc.)',ga:'13',sq:'4'},
+  ];
+  document.getElementById('web-compare').innerHTML=compare.map(r=>`<div style="display:grid;grid-template-columns:2fr 1fr 1fr;gap:0;border-bottom:.5px solid var(--border)"><div style="font-size:11px;padding:5px 8px">${r.ch}</div><div style="font-size:11px;padding:5px 8px;text-align:right;color:#e6950a">${r.ga}</div><div style="font-size:11px;padding:5px 8px;text-align:right;color:#5aaad9">${r.sq}</div></div>`).join('');
+
+  const nu=[172,226,250,280,246,245,188,177,227,273,297,267,268,236,190,166,364,277,354,370,334,225,366,334,328,365,359,325,268,308,352];
+  const ru=[42,59,67,75,64,78,29,33,52,82,66,60,75,59,54,47,108,84,92,110,101,61,80,92,79,97,81,84,61,82,110];
+  const maxD=Math.max(...nu.map((v,i)=>v+ru[i]));
+  document.getElementById('daily-bars').innerHTML=nu.map((n,i)=>{
+    const r=ru[i];
+    return`<div style="flex:1;display:flex;flex-direction:column;align-items:stretch"><div style="height:${Math.round((n/maxD)*56)}px;background:var(--gold);border-radius:1px 1px 0 0"></div><div style="height:${Math.round((r/maxD)*56)}px;background:var(--blue)"></div></div>`;
+  }).join('');
+}
+
+// ══ EVENTS ════════════════════════════════════════════════════════════════════
+let events=[
+  // WM Hosted
+  {name:"What's Happening DMV Market",month:"Jan",date:"Jan 25",type:"wm",note:"Recurring market event",rsvp:"",ticketed:false,tickets:0,ticketRev:0,wmShare:0},
+  {name:"Art Gallery Installation",month:"Feb",date:"Feb 1 – Mar 31",type:"wm",note:"Multi-month installation",rsvp:"",ticketed:false,tickets:0,ticketRev:0,wmShare:0},
+  {name:"What's Happening DMV Market",month:"Feb",date:"Feb 22",type:"wm",note:"Recurring",rsvp:"",ticketed:false,tickets:0,ticketRev:0,wmShare:0},
+  {name:"What's Happening DMV Market",month:"Mar",date:"Mar 29",type:"wm",note:"Recurring",rsvp:"",ticketed:false,tickets:0,ticketRev:0,wmShare:0},
+  {name:"Pop-Up: D/Lai",month:"Mar",date:"Mar (ongoing)",type:"wm",note:"Regular pop-up vendor",rsvp:"",ticketed:false,tickets:0,ticketRev:0,wmShare:0},
+  {name:"What's Happening DMV Market",month:"Apr",date:"Apr 26",type:"wm",note:"Recurring",rsvp:"",ticketed:false,tickets:0,ticketRev:0,wmShare:0},
+  {name:"Spring Pop-Up Market",month:"May",date:"TBD",type:"wm",note:"Confirm date with team",rsvp:"",ticketed:false,tickets:0,ticketRev:0,wmShare:0},
+  {name:"What's Happening DMV Market",month:"Jun",date:"Jun 28",type:"wm",note:"Recurring",rsvp:"",ticketed:false,tickets:0,ticketRev:0,wmShare:0},
+  {name:"Summer Market Series",month:"Jul",date:"TBD",type:"wm",note:"Confirm dates with team",rsvp:"",ticketed:false,tickets:0,ticketRev:0,wmShare:0},
+  {name:"What's Happening DMV Market",month:"Aug",date:"Aug 30",type:"wm",note:"Recurring",rsvp:"",ticketed:false,tickets:0,ticketRev:0,wmShare:0},
+  {name:"What's Happening DMV Market",month:"Sep",date:"Sep 27",type:"wm",note:"Recurring",rsvp:"",ticketed:false,tickets:0,ticketRev:0,wmShare:0},
+  {name:"Fall Pop-Up Market",month:"Oct",date:"TBD",type:"wm",note:"Confirm date with team",rsvp:"",ticketed:false,tickets:0,ticketRev:0,wmShare:0},
+  {name:"What's Happening DMV Market",month:"Nov",date:"Nov 22",type:"wm",note:"Recurring",rsvp:"",ticketed:false,tickets:0,ticketRev:0,wmShare:0},
+  {name:"Holiday Market",month:"Dec",date:"Dec 5–20",type:"wm",note:"Annual holiday activation",rsvp:"",ticketed:false,tickets:0,ticketRev:0,wmShare:0},
+  // City / External
+  {name:"MLK Day",month:"Jan",date:"Jan 19",type:"city",note:"GW no classes · potential traffic dip"},
+  {name:"Presidential Inauguration",month:"Jan",date:"Jan 20",type:"city",note:"Major city event — expect high foot traffic"},
+  {name:"Cherry Blossom Festival",month:"Apr",date:"Apr 2–13",type:"city",note:"Peak tourist season — significant traffic boost"},
+  {name:"Cherry Blossom Parade",month:"Apr",date:"Apr 12",type:"city",note:"Single-day spike event"},
+  {name:"America's 250 Celebrations",month:"May",date:"May – Jul",type:"city",note:"Multi-month national anniversary events in DC"},
+  {name:"DC Pride",month:"Jun",date:"Jun 7",type:"city",note:"Large city event — high foot traffic"},
+  {name:"Independence Day",month:"Jul",date:"Jul 4",type:"city",note:"Major tourist day — expect very high traffic"},
+  {name:"DC Jazz Festival",month:"Jun",date:"Jun 13–22",type:"city",note:"Annual festival — draws regional visitors"},
+  {name:"National Book Festival",month:"Sep",date:"Sep 5–6",type:"city",note:"Convention Center — transit traffic past WM"},
+  {name:"Marine Corps Marathon",month:"Oct",date:"Oct 25",type:"city",note:"Road closures possible — check Penn Ave impact"},
+  {name:"Veterans Day",month:"Nov",date:"Nov 11",type:"city",note:"Federal holiday — office traffic drops"},
+  {name:"Thanksgiving",month:"Nov",date:"Nov 26",type:"city",note:"Major drop — GW break + federal holiday"},
+  {name:"Christmas",month:"Dec",date:"Dec 24–25",type:"city",note:"Closed or reduced hours"},
+  {name:"IMF / World Bank Spring Meeting",month:"Apr",date:"Late Apr",type:"city",note:"Major conference ~¼ mile · significant visitor traffic · happens twice yearly"},
+  {name:"IMF / World Bank Annual Meeting",month:"Oct",date:"Mid Oct",type:"city",note:"Largest of the two annual meetings · expect elevated lunch traffic"},
+  {name:"GW New Student Orientation / First Night",month:"Aug",date:"Aug 22–25",type:"city",note:"GW freshman orientation — family visits, high weekday traffic spike"},
+  {name:"GW Commencement",month:"May",date:"May 17",type:"city",note:"Graduation weekend — family visits, elevated Saturday traffic"},
+];
+
+const gwStat={Jan:"gw",Feb:"gw",Mar:"gw",Apr:"gw",May:"brk",Jun:"brk",Jul:"brk",Aug:"brk",Sep:"gw",Oct:"gw",Nov:"gw",Dec:"brk"};
+
+// ── Weather log — Open-Meteo auto-fetch ──────────────────────────────────────
+const WX_LAT = 38.9072, WX_LON = -77.0369;
+const REPORT_YEAR = 2026, REPORT_MONTH = 3; // March 2026 (1-indexed)
+let weatherLog = [];
+
+let fymaDaily = {
+  'Mar 5':  {visitors: 17420, note: 'Sidon Travel + Envoys tour groups'},
+  'Mar 17': {visitors: 19800, note: "St. Patrick's Day — elevated evening traffic"},
+  'Mar 18': {visitors: 16950, note: 'Four Winds Tours visit'},
+  'Mar 19': {visitors: 15200, note: 'Four Winds Tours follow-up visit'},
+  'Mar 29': {visitors: 18600, note: "What's Happening DMV Market"},
+};
+
+function wmoLabel(code, precip, snowfall) {
+  if (snowfall > 0.1) return '❄️ Snow';
+  if (code >= 95) return '⛈️ Thunderstorm';
+  if (code >= 80) return '🌧️ Heavy rain';
+  if (code >= 61) return '🌧️ Rain';
+  if (code >= 51) return '🌦️ Drizzle';
+  if (code >= 45) return '🌫️ Fog';
+  if (code === 3)  return '☁️ Overcast';
+  if (code === 2)  return '⛅ Partly cloudy';
+  if (code === 1)  return '🌤️ Mostly clear';
+  return '☀️ Sunny';
+}
+
+async function fetchWeather() {
+  const badge = document.getElementById('wxStatusBadge');
+  if (badge) { badge.textContent = 'Fetching…'; badge.style.color = 'var(--muted)'; }
+  const startDate = `${REPORT_YEAR}-${String(REPORT_MONTH).padStart(2,'0')}-01`;
+  const daysInMonth = new Date(REPORT_YEAR, REPORT_MONTH, 0).getDate();
+  const endDate = `${REPORT_YEAR}-${String(REPORT_MONTH).padStart(2,'0')}-${daysInMonth}`;
+  const url = `https://archive-api.open-meteo.com/v1/archive?latitude=${WX_LAT}&longitude=${WX_LON}`
+    + `&start_date=${startDate}&end_date=${endDate}`
+    + `&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,snowfall_sum,weathercode`
+    + `&temperature_unit=fahrenheit&precipitation_unit=inch&timezone=America%2FNew_York`;
+  try {
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('API error ' + res.status);
+    const data = await res.json();
+    const d = data.daily;
+    weatherLog = d.time.map((dateStr, i) => {
+      const dt = new Date(dateStr + 'T12:00:00');
+      const day = dt.getDate();
+      const dow = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][dt.getDay()];
+      const dateLabel = `Mar ${day}`;
+      const high = Math.round(d.temperature_2m_max[i]);
+      const low  = Math.round(d.temperature_2m_min[i]);
+      const precip = Math.round((d.precipitation_sum[i] || 0) * 100) / 100;
+      const snow  = d.snowfall_sum[i] || 0;
+      const cond  = wmoLabel(d.weathercode[i], precip, snow);
+      const fyma  = fymaDaily[dateLabel] || null;
+      return { date: dateLabel, day, dow, high, low, precip, snow, cond, fyma };
+    });
+    if (badge) {
+      badge.textContent = '✓ Weather loaded · Open-Meteo';
+      badge.style.color = '#7ab648';
+      badge.style.borderColor = 'rgba(122,182,72,.3)';
+      badge.style.background = 'rgba(122,182,72,.08)';
+    }
+    renderWeatherTable();
+    renderWxSummary();
+    renderMonthCal();
+  } catch (err) {
+    if (badge) { badge.textContent = '⚠ Could not load — check connection'; badge.style.color = '#e07060'; }
+    if (weatherLog.length === 0) buildEmptyWeatherLog();
+    renderWeatherTable();
+  }
+}
+
+function buildEmptyWeatherLog() {
+  const daysInMonth = new Date(REPORT_YEAR, REPORT_MONTH, 0).getDate();
+  weatherLog = [];
+  for (let d = 1; d <= daysInMonth; d++) {
+    const dt = new Date(REPORT_YEAR, REPORT_MONTH - 1, d);
+    const dow = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][dt.getDay()];
+    const dateLabel = `Mar ${d}`;
+    weatherLog.push({ date: dateLabel, day: d, dow, high: null, low: null, precip: null, snow: 0, cond: '—', fyma: fymaDaily[dateLabel] || null });
+  }
+}
+
+function renderWxSummary() {
+  const loaded = weatherLog.filter(w => w.high !== null);
+  if (!loaded.length) return;
+  const avgHigh = Math.round(loaded.reduce((s,w) => s + w.high, 0) / loaded.length);
+  const rainDays = loaded.filter(w => (w.precip || 0) > 0.1).length;
+  const snowDays = loaded.filter(w => w.snow > 0.1 || w.low < 32).length;
+  const fymaCount = Object.keys(fymaDaily).length;
+  const el = id => document.getElementById(id);
+  if (el('wxAvgHigh'))   el('wxAvgHigh').textContent   = avgHigh + '°F';
+  if (el('wxRainDays'))  el('wxRainDays').textContent  = rainDays;
+  if (el('wxSnowDays'))  el('wxSnowDays').textContent  = snowDays;
+  if (el('wxFymaCount')) el('wxFymaCount').textContent = fymaCount;
+}
+
+function renderWeatherTable() {
+  const tbody = document.getElementById('wxTableBody');
+  if (!tbody) return;
+  tbody.innerHTML = weatherLog.map((w) => {
+    const isWeekend = w.dow === 'Sat' || w.dow === 'Sun';
+    const hasRain = (w.precip || 0) > 0.1;
+    const hasSnow = (w.snow || 0) > 0.1;
+    const rowBg = isWeekend ? 'background:rgba(171,152,104,.05);' : '';
+    const precipDisplay = w.precip !== null
+      ? (w.precip > 0 ? `<span style="color:${hasRain||hasSnow?'#5aaad9':'var(--muted)'}">${w.precip}"</span>` : '<span style="color:var(--muted)">—</span>')
+      : '<span style="color:var(--muted)">—</span>';
+    const fymaDisplay = w.fyma
+      ? `<span style="color:#5aaad9;font-weight:600">${w.fyma.visitors.toLocaleString()}</span>`
+      : `<span style="color:var(--muted)">—</span>`;
+    const highDisplay = w.high !== null ? w.high + '°' : '<span style="color:var(--muted)">—</span>';
+    const lowDisplay  = w.low  !== null ? w.low  + '°' : '<span style="color:var(--muted)">—</span>';
+    return `<tr style="${rowBg}">
+      <td style="font-weight:600;color:${isWeekend?'var(--gold2)':'var(--white)'}">${w.date}</td>
+      <td style="color:var(--muted);font-size:10px">${w.dow}</td>
+      <td>${w.cond}</td>
+      <td class="r">${highDisplay}</td>
+      <td class="r">${lowDisplay}</td>
+      <td class="r">${precipDisplay}</td>
+      <td class="r">${fymaDisplay}</td>
+      <td style="font-size:10px;color:var(--muted);font-style:italic">${w.fyma?.note||''}</td>
+      <td><button class="del-btn" onclick="clearFymaEntry('${w.date}')" title="Clear Fyma entry" style="font-size:11px">✕</button></td>
+    </tr>`;
+  }).join('');
+  renderWxSummary();
+}
+
+function addFymaEntry() {
+  const date  = document.getElementById('wxFymaDate').value.trim();
+  const count = parseInt(document.getElementById('wxFymaCount2').value) || 0;
+  const note  = document.getElementById('wxFymaNote').value.trim();
+  if (!date || !count) { alert('Please enter a date and visitor count.'); return; }
+  fymaDaily[date] = { visitors: count, note };
+  const row = weatherLog.find(w => w.date === date);
+  if (row) row.fyma = fymaDaily[date];
+  document.getElementById('wxFymaDate').value = '';
+  document.getElementById('wxFymaCount2').value = '';
+  document.getElementById('wxFymaNote').value = '';
+  renderWeatherTable();
+}
+
+function clearFymaEntry(date) {
+  delete fymaDaily[date];
+  const row = weatherLog.find(w => w.date === date);
+  if (row) row.fyma = null;
+  renderWeatherTable();
+}
+
+// ── Monthly calendar ──────────────────────────────────────────────────────────
+let calYear=2026, calMonth=2; // 0-indexed; 2 = March
+const MONTH_NAMES=['January','February','March','April','May','June','July','August','September','October','November','December'];
+const DOW=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+
+function calPrev(){calMonth--;if(calMonth<0){calMonth=11;calYear--;}renderMonthCal();}
+function calNext(){calMonth++;if(calMonth>11){calMonth=0;calYear++;}renderMonthCal();}
+
+function renderMonthCal(){
+  const mn=MOS[calMonth];
+  document.getElementById('calMonthTitle').textContent=MONTH_NAMES[calMonth]+' '+calYear;
+  document.getElementById('calDowHeaders').innerHTML=DOW.map(d=>`<div class="cal-dow">${d}</div>`).join('');
+  const firstDay=new Date(calYear,calMonth,1).getDay();
+  const daysInMonth=new Date(calYear,calMonth+1,0).getDate();
+  const gwStatus=gwStat[mn];
+  const monthEvents=events.filter(e=>e.month===mn);
+  let cells='';
+  for(let i=0;i<firstDay;i++) cells+=`<div class="cal-day empty"></div>`;
+  for(let d=1;d<=daysInMonth;d++){
+    const dow=(firstDay+d-1)%7;
+    const isWeekend=dow===0||dow===6;
+    const gwClass=gwStatus==='gw'?'has-gw-in':'has-gw-break';
+    const dayEvs=monthEvents.filter(e=>{
+      if(!e.date) return false;
+      return e.date.includes(String(d))||e.date.toLowerCase().includes('ongoing');
+    });
+    const wx=weatherLog.find(w=>w.date===mn+' '+d||w.date===mn+' 0'+d);
+    let evHtml=dayEvs.map(e=>`<span class="cal-ev ${e.type==='wm'?'cal-ev-wm':'cal-ev-city'}" title="${e.name}${e.note?' · '+e.note:''}">${e.name}</span>`).join('');
+    if(wx) evHtml+=`<span class="cal-ev cal-ev-wx" title="${wx.cond}${wx.fyma?' · '+wx.fyma.visitors.toLocaleString()+' visitors':''}">${wx.cond.split(' ')[0]} ${wx.high!==null?wx.high+'°/'+wx.low+'°':''}</span>`;
+    cells+=`<div class="cal-day ${isWeekend?'weekend':''} ${gwClass}"><div class="cal-day-num">${d}</div>${evHtml}</div>`;
+  }
+  document.getElementById('calDayGrid').innerHTML=cells;
+}
+
+// ── Year grid ─────────────────────────────────────────────────────────────────
+function renderYearGrid(){
+  document.getElementById('year-grid').innerHTML=MOS.map(m=>{
+    const mEv=events.filter(e=>e.month===m);
+    const gw=gwStat[m];
+    const gwPill=`<span class="pill ${gw==='gw'?'pill-gw':'pill-brk'}"><span class="pdot" style="background:${gw==='gw'?'var(--green)':'var(--red)'}"></span>${gw==='gw'?'GW in session':'GW break'}</span>`;
+    const evPills=mEv.map(e=>`<span class="pill ${e.type==='wm'?'pill-wm':'pill-city'}" title="${e.note||''}"><span class="pdot" style="background:${e.type==='wm'?'var(--gold)':'var(--blue)'}"></span>${e.name}${e.date?' · '+e.date:''}</span>`).join('');
+    return`<div class="mo-block"><div class="mo-hdr"><div class="mo-name">${m.toUpperCase()}</div><div class="mo-line"></div></div><div class="pill-wrap">${gwPill}${evPills}</div></div>`;
+  }).join('');
+}
+
+// ── Event lists ───────────────────────────────────────────────────────────────
+function renderEvLists(){
+  document.getElementById('list-wm').innerHTML=events.filter(e=>e.type==='wm').map(e=>{
+    const ticketInfo=e.ticketed&&e.wmShare?`<div class="ev-note" style="color:var(--green)">WM share: $${Number(e.wmShare).toLocaleString()} · ${e.tickets} tickets · $${Number(e.ticketRev).toLocaleString()} total</div>`:'';
+    const rsvpInfo=e.rsvp?`<div class="ev-note">RSVP / attendance: ${e.rsvp}</div>`:'';
+    return`<div class="ev-row"><div class="ev-dot" style="background:var(--gold)"></div><div class="ev-info"><div class="ev-name">${e.name}</div><div class="ev-date">${e.date}</div>${e.note?`<div class="ev-note">${e.note}</div>`:''} ${rsvpInfo}${ticketInfo}</div><div class="ev-type et-wm">WM</div></div>`;
+  }).join('');
+  document.getElementById('list-city').innerHTML=events.filter(e=>e.type==='city').map(e=>`<div class="ev-row"><div class="ev-dot" style="background:var(--blue)"></div><div class="ev-info"><div class="ev-name">${e.name}</div><div class="ev-date">${e.date||''}</div>${e.note?`<div class="ev-note">${e.note}</div>`:''}</div><div class="ev-type et-city">City</div></div>`).join('');
+}
+
+function renderAddPreview(){
+  document.getElementById('add-preview').innerHTML=events.map((e,i)=>`<div class="ev-row"><div class="ev-dot" style="background:${e.type==='wm'?'var(--gold)':'var(--blue)'}"></div><div class="ev-info"><div class="ev-name">${e.name} <span style="font-size:9px;color:var(--muted);font-weight:400">· ${e.month} ${e.date||''}</span></div>${e.note?`<div class="ev-note">${e.note}</div>`:''}</div><div class="ev-type ${e.type==='wm'?'et-wm':'et-city'}">${e.type==='wm'?'WM':'City'}</div><button class="del-btn" onclick="removeEvent(${i})">×</button></div>`).join('');
+}
+
+function toggleTicketed(){
+  const isTicketed=document.getElementById('newTicketed').checked;
+  document.getElementById('ticketedFields').classList.toggle('show',isTicketed);
+}
+
+function addEvent(){
+  const n=document.getElementById('newName').value.trim();
+  const d=document.getElementById('newDate').value.trim();
+  const mo=document.getElementById('newMonth').value;
+  const ty=document.getElementById('newType').value;
+  const nt=document.getElementById('newNote').value.trim();
+  const rv=document.getElementById('newRsvp').value.trim();
+  const isT=document.getElementById('newTicketed').checked;
+  const tc=parseFloat(document.getElementById('newTicketCount').value)||0;
+  const tr=parseFloat(document.getElementById('newTicketRev').value)||0;
+  const ts=parseFloat(document.getElementById('newTicketShare').value)||0;
+  if(!n||!mo){alert('Please enter an event name and select a month.');return;}
+  events.push({name:n,date:d,month:mo,type:ty,note:nt,rsvp:rv,ticketed:isT,tickets:tc,ticketRev:tr,wmShare:ts});
+  document.getElementById('newName').value='';
+  document.getElementById('newDate').value='';
+  document.getElementById('newNote').value='';
+  document.getElementById('newRsvp').value='';
+  document.getElementById('newTicketed').checked=false;
+  document.getElementById('newTicketCount').value='';
+  document.getElementById('newTicketRev').value='';
+  document.getElementById('newTicketShare').value='';
+  document.getElementById('ticketedFields').classList.remove('show');
+  renderAllEvents();
+}
+function removeEvent(i){events.splice(i,1);renderAllEvents();}
+function renderAllEvents(){renderYearGrid();renderEvLists();renderAddPreview();renderMonthCal();}
+
+// ══ LIVE 2026 DATA FETCH ══════════════════════════════════════════════════════
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwrWxRSefA_zdu__LzalH1qmtJ0jRca5F2KFrw3qDkuYNMoPOAW9ESIWt6qMIVBU-qIpg/exec';
+
+const MONTH_NAME_MAP = {
+  january:0,february:1,march:2,april:3,may:4,june:5,
+  july:6,august:7,september:8,october:9,november:10,december:11,
+  jan:0,feb:1,mar:2,apr:3,jun:5,jul:6,aug:7,sep:8,oct:9,nov:10,dec:11
+};
+
+const NAME_ALIASES = {
+  'gigi pasta'         : "GiGi's Pasta",
+  'gigis pasta'        : "GiGi's Pasta",
+  'capo'               : 'Capo Deli',
+  'pop up dlai'        : 'D/Lai',
+  'dlai'               : 'D/Lai',
+  'litbox book vending': 'LitBox',
+  'litbox'             : 'LitBox',
+  'lous buns'          : "Lou's Buns",
+  'masons lobster'     : "Mason's Lobster",
+  'andys pizza'        : "Andy's Pizza",
+  'dukes grocery'      : "Duke's Grocery",
+  'mondepice pop up'   : 'Mondepice',
+  'mondepice'          : 'Mondepice',
+  'captain cookie'     : 'Captain Cookie',
+};
+
+function normName(s){
+  return String(s).toLowerCase().replace(/[^a-z0-9 ]/g,'').replace(/\s+/g,' ').trim();
+}
+function resolveAlias(sheetName){
+  const key = normName(sheetName);
+  return NAME_ALIASES[key] || sheetName;
+}
+function matchTenant(sheetName, roster){
+  const resolved = resolveAlias(sheetName);
+  const key = normName(resolved);
+  let hit = roster.find(t => normName(t.name) === key);
+  if(hit) return hit;
+  hit = roster.find(t => {
+    const rk = normName(t.name);
+    return rk.includes(key) || key.includes(rk);
+  });
+  return hit || null;
+}
+function parseNum(v){
+  if(v===null||v===undefined||v===''||v==='-') return 0;
+  const n = parseFloat(String(v).replace(/[$,\s]/g,''));
+  return isNaN(n) ? 0 : n;
+}
+function buildMonthColMap(headers){
+  const map = {};
+  headers.forEach((h, colIdx) => {
+    const norm = normName(String(h));
+    for(const [key, mi] of Object.entries(MONTH_NAME_MAP)){
+      if(norm === key || norm.startsWith(key+' ')){
+        if(!(mi in map)) map[mi] = colIdx;
+        break;
+      }
+    }
+  });
+  return map;
+}
+function applySheetToRoster(rows, roster){
+  if(!rows || rows.length < 2) return 0;
+  const headers = rows[0].map(h => String(h||''));
+  const monthColMap = buildMonthColMap(headers);
+  const NAME_COL = 1;
+  let matched = 0;
+  rows.slice(1).forEach(row => {
+    const rawName = String(row[NAME_COL] || '').trim();
+    if(!rawName || /^(tenant|name|pop.?up\s*$|vacant\s*$)/i.test(rawName)) return;
+    const tenant = matchTenant(rawName, roster);
+    if(!tenant) return;
+    Object.entries(monthColMap).forEach(([mi, col]) => {
+      if(col < row.length) tenant.m[Number(mi)] = parseNum(row[col]);
+    });
+    matched++;
+  });
+  return matched;
+}
+function recalcTotalSales2026(){
+  for(let i=0;i<12;i++){
+    totalSales2026[i] =
+      wmTenants2026.reduce((s,t)=>s+(t.m[i]||0),0) +
+      pennTenants2026.reduce((s,t)=>s+(t.m[i]||0),0);
+  }
+}
+function setSalesStatus(state, detail){
+  const el = document.getElementById('sales-src');
+  if(!el) return;
+  const icons = {live:'🟢', warn:'🟡', error:'🔴'};
+  const now = new Date().toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
+  el.innerHTML = `${icons[state]||'⚪'} 2026: <strong>${detail}</strong> · refreshed ${now} · 2025: hardcoded annual`;
+}
+async function fetch2026Sales(){
+  setSalesStatus('warn','fetching from Google Sheet…');
+  try{
+    const res = await fetch(APPS_SCRIPT_URL + '?report=sales2026');
+    if(!res.ok) throw new Error('HTTP ' + res.status);
+    const text = await res.text();
+    let json;
+    try{ json = JSON.parse(text); }
+    catch(pe){ throw new Error('JSON parse failed: ' + text.slice(0,200)); }
+    let rows;
+    if(Array.isArray(json)){
+      rows = json;
+    } else if(json.headers && json.rows){
+      rows = [json.headers, ...json.rows];
+    } else {
+      rows = json.data||json.values||null;
+    }
+    if(!rows || !Array.isArray(rows)) throw new Error('Unexpected shape: ' + JSON.stringify(json).slice(0,120));
+    const wmHits  = applySheetToRoster(rows, wmTenants2026);
+    const pnHits  = applySheetToRoster(rows, pennTenants2026);
+    const total   = wmHits + pnHits;
+    recalcTotalSales2026();
+    if(total === 0){
+      setSalesStatus('warn','connected · 0 tenants matched — check sheet column B');
+    } else {
+      setSalesStatus('live','live from Google Sheet · '+total+' tenant'+(total!==1?'s':'')+' updated');
+    }
+  } catch(err){
+    setSalesStatus('error','could not load — '+err.message);
+    console.error('WM Dashboard: 2026 fetch failed:', err);
+  }
+  if(selYear===2026) renderSales();
+}
+
+function parseQtrlyWM(json){
+  const rows = json.headers && json.rows ? [json.headers,...json.rows] : json;
+  if(!rows||rows.length<2) return [];
+  const out=[];
+  rows.slice(1).forEach(row=>{
+    const name=String(row[1]||'').trim();
+    if(!name||/^(total|$)/i.test(name)||name==='') return;
+    const vacant=/vacant/i.test(name);
+    const q1=fmtQ(row[3]); const q2=fmtQ(row[4]); const q3=fmtQ(row[5]); const q4=fmtQ(row[6]);
+    const r1=fmtQ(row[11]); const r2=fmtQ(row[12]); const r3=fmtQ(row[13]); const r4=fmtQ(row[14]);
+    const total=fmtQ(row[2]);
+    let thr=null;
+    const thrStr=String(row[7]||'');
+    const thrMatch=thrStr.match(/\$([\d,]+(?:\.\d+)?)/);
+    if(thrMatch) thr=parseFloat(thrMatch[1].replace(/,/g,''));
+    out.push({name:name.replace(/\s*\(.*?\)/,'').trim(),vacant,total,q:[q1,q2,q3,q4],rent:[r1,r2,r3,r4],threshold:thr});
+  });
+  return out;
+}
+function parseQtrlyPenn(json){
+  const rows = json.headers && json.rows ? json.rows : json.slice(1);
+  if(!rows||rows.length<12) return [];
+  const salesRows=rows.slice(0,4);
+  const rentRows=rows.slice(11,15);
+  return salesRows.map((sRow,i)=>{
+    const rRow=rentRows[i]||[];
+    const name=String(sRow[1]||'').trim();
+    if(!name) return null;
+    const vacant=/vacant/i.test(name);
+    const q1s=fmtQ(sRow[6]);  const q2s=fmtQ(sRow[10]); const q3s=fmtQ(sRow[14]); const q4s=fmtQ(sRow[18]);
+    const q1r=fmtQ(rRow[6]);  const q2r=fmtQ(rRow[10]); const q3r=fmtQ(rRow[14]); const q4r=fmtQ(rRow[18]);
+    const total=fmtQ(sRow[2]);
+    let thr=null;
+    const thrStr=String(sRow[19]||'');
+    const thrMatch=thrStr.match(/\$([\d,]+(?:\.\d+)?)/);
+    if(thrMatch) thr=parseFloat(thrMatch[1].replace(/,/g,''));
+    return {name,vacant,total,q:[q1s,q2s,q3s,q4s],rent:[q1r,q2r,q3r,q4r],threshold:thr};
+  }).filter(Boolean);
+}
+async function fetchQtrly2026(){
+  try{
+    const [resWM, resPenn] = await Promise.all([
+      fetch(APPS_SCRIPT_URL+'?report=qtrly2026wm'),
+      fetch(APPS_SCRIPT_URL+'?report=qtrly2026penn'),
+    ]);
+    if(resWM.ok){
+      const j=await resWM.json();
+      qtrly2026wm=parseQtrlyWM(j);
+    }
+    if(resPenn.ok){
+      const j=await resPenn.json();
+      qtrly2026penn=parseQtrlyPenn(j);
+    }
+    if(selYear===2026) renderRent();
+  } catch(err){
+    console.error('WM Dashboard: quarterly fetch failed:',err);
+  }
+}
+
+// ══ LEASES & AR DATA ══════════════════════════════════════════════════════════
+
+// Helper to format dates from ISO strings
+function fmtDate(s){
+  if(!s||s==='-'||s==='') return '—';
+  const d=new Date(s); if(isNaN(d)) return s;
+  return (d.getMonth()+1)+'/'+(d.getDate())+'/'+d.getFullYear().toString().slice(2);
+}
+function fmtMoney(n){
+  if(n===null||n===undefined||n===''||n===0) return '—';
+  return '$'+Number(n).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+}
+function fmtSqft(n){ return n?n.toLocaleString()+' sf':'—'; }
+
+// ── Lease data ────────────────────────────────────────────────────────────────
+const LEASES_WM=[
+  {loc:'FH 1', name:'Bandoola Bowl',    sqft:618,  leaseStart:'2021-10-21',leaseEnd:'2029-12-07',psf:148.53,monthlyRent:7649.09,storage:'—',       nextIncrease:'2026-07-01',pctRent:'10% of GSR > $250,000',status:'active'},
+  {loc:'FH 2', name:'Onkei',            sqft:488,  leaseStart:'2021-10-01',leaseEnd:'2028-09-30',psf:249.09,monthlyRent:10129.58,storage:'Cold+Dry', nextIncrease:'2026-10-01',pctRent:'10% of GSR > $303,887',status:'expiring-soon'},
+  {loc:'FH 3', name:"GiGi's Pasta",    sqft:361,  leaseStart:'2025-05-30',leaseEnd:'2030-03-31',psf:230.00,monthlyRent:6919.17,storage:'—',        nextIncrease:'—',          pctRent:'9% of GSR > $250,000 (quarterly)',status:'active'},
+  {loc:'FH 4', name:'Vacant',           sqft:270,  leaseStart:'—',         leaseEnd:'—',         psf:null,  monthlyRent:null,   storage:'—',        nextIncrease:'—',          pctRent:'—',status:'vacant'},
+  {loc:'FH 5', name:"Mason's Lobster",  sqft:264,  leaseStart:'2021-09-20',leaseEnd:'2027-05-19',psf:286.49,monthlyRent:6302.85,storage:'Incl.',    nextIncrease:'2027-05-19',pctRent:'10% of GSR > $189,085',status:'active'},
+  {loc:'FH 6', name:'Roaming Rooster',  sqft:280,  leaseStart:'2021-09-29',leaseEnd:'2026-11-28',psf:289.42,monthlyRent:6753.05,storage:'Dry',      nextIncrease:'2025-12-01',pctRent:'10% of GSR > $202,592',status:'expiring-2026'},
+  {loc:'FH 7', name:'Capo Deli',        sqft:282,  leaseStart:'2021-09-20',leaseEnd:'2028-11-19',psf:215.52,monthlyRent:5064.79,storage:'Cold+Dry', nextIncrease:'2026-12-01',pctRent:'10% of GSR > $151,944',status:'active'},
+  {loc:'FH 8', name:'Vacant',           sqft:1161, leaseStart:'—',         leaseEnd:'—',         psf:null,  monthlyRent:null,   storage:'—',        nextIncrease:'—',          pctRent:'—',status:'vacant'},
+  {loc:'FH 9', name:'Alitiko',          sqft:588,  leaseStart:'2023-03-01',leaseEnd:'2030-02-28',psf:169.97,monthlyRent:8328.77,storage:'Cold+Dry', nextIncrease:'2027-05-01',pctRent:'10% of GSR > $300,000',status:'active'},
+  {loc:'FH 10',name:'Falafel Inc.',     sqft:452,  leaseStart:'2022-02-01',leaseEnd:'2025-01-31',psf:140.83,monthlyRent:5304.50,storage:'Dry',      nextIncrease:'—',          pctRent:'6% of GSR > $300,000',status:'mtm'},
+  {loc:'FH 11',name:'Arepa Zone',       sqft:369,  leaseStart:'2022-01-08',leaseEnd:'2027-01-07',psf:223.88,monthlyRent:6884.18,storage:'Cold+Dry', nextIncrease:'2026-02-01',pctRent:'9% of GSR > $212,500',status:'active'},
+  {loc:'FH 12',name:'Southblock',       sqft:221,  leaseStart:'2026-01-27',leaseEnd:'—',         psf:352.94,monthlyRent:6500.00,storage:'Dry+Cold', nextIncrease:'—',          pctRent:'10% of GSR > $780,000 (annual)',status:'active'},
+  {loc:'FH 13',name:'Bullfrog Bagels',  sqft:631,  leaseStart:'2023-03-01',leaseEnd:'2028-02-29',psf:103.90,monthlyRent:5463.63,storage:'—',        nextIncrease:'2026-03-01',pctRent:'6% of GSR > $273,182',status:'active'},
+  {loc:'FH 14',name:"Andy's Pizza",     sqft:1703, leaseStart:'2023-09-15',leaseEnd:'2033-12-31',psf:74.03, monthlyRent:10506.25,storage:'Incl.',   nextIncrease:'2027-01-01',pctRent:'6% of GSR > $700,000',status:'active'},
+  {loc:'FH 15',name:'Vacant (old CC)',  sqft:533,  leaseStart:'—',         leaseEnd:'—',         psf:null,  monthlyRent:null,   storage:'Dry',      nextIncrease:'—',          pctRent:'—',status:'vacant'},
+  {loc:'FH 16',name:'Vacant (Tiger Sugar)',sqft:605,leaseStart:'—',        leaseEnd:'—',         psf:null,  monthlyRent:null,   storage:'—',        nextIncrease:'—',          pctRent:'—',status:'vacant'},
+  {loc:'FH 17',name:'Mondepice',        sqft:390,  leaseStart:'—',         leaseEnd:'—',         psf:0,     monthlyRent:null,   storage:'—',        nextIncrease:'—',          pctRent:'—',status:'popup'},
+  {loc:'LL02', name:'Vacant (EXPAT)',   sqft:8540, leaseStart:'—',         leaseEnd:'—',         psf:null,  monthlyRent:null,   storage:'—',        nextIncrease:'—',          pctRent:'—',status:'vacant'},
+  {loc:'20402',name:'Captain Cookie',   sqft:1513, leaseStart:'2024-12-01',leaseEnd:'2034-11-30',psf:47.65, monthlyRent:6008.33,storage:'—',        nextIncrease:'2026-12-01',pctRent:'8% of GSR > $72,100 (monthly)',status:'active'},
+];
+const LEASES_PENN=[
+  {loc:'M10',   name:'Bindaas',         sqft:3235, leaseStart:'2016-12-05',leaseEnd:'2028-04-30',psf:53.85, monthlyRent:14516.38,storage:'—',       nextIncrease:'2026-02-01',pctRent:'6% of GSR > $725,819',status:'active'},
+  {loc:'M003A', name:"Duke's Grocery",  sqft:3405, leaseStart:'2019-07-01',leaseEnd:'2029-06-30',psf:57.98, monthlyRent:16453.15,storage:'—',        nextIncrease:'2026-07-01',pctRent:'6% of GSR > $4,058,926 (monthly)',status:'active'},
+  {loc:'M011',  name:'Maman',           sqft:3306, leaseStart:'2025-01-06',leaseEnd:'2035-01-05',psf:55.00, monthlyRent:15152.50,storage:'—',        nextIncrease:'2026-02-01',pctRent:'7% of GSR > $750,000',status:'active'},
+];
+const LEASES_RETAIL=[
+  {loc:'M015A', name:'Chipotle',        sqft:null, leaseStart:'2013-09-01',leaseEnd:'—',         psf:null,  monthlyRent:null,   storage:'—',        nextIncrease:'—',          pctRent:'—',status:'active'},
+  {loc:'825',   name:'UPS (AANRB)',     sqft:null, leaseStart:'—',         leaseEnd:'—',         psf:null,  monthlyRent:null,   storage:'—',        nextIncrease:'—',          pctRent:'—',status:'active'},
+  {loc:'950',   name:'CVS',             sqft:null, leaseStart:'—',         leaseEnd:'—',         psf:null,  monthlyRent:null,   storage:'—',        nextIncrease:'—',          pctRent:'—',status:'active'},
+  {loc:'958',   name:'ProPhoto',        sqft:null, leaseStart:'—',         leaseEnd:'—',         psf:null,  monthlyRent:null,   storage:'—',        nextIncrease:'—',          pctRent:'—',status:'active'},
+  {loc:'20401', name:'Puglisi',         sqft:null, leaseStart:'—',         leaseEnd:'—',         psf:null,  monthlyRent:null,   storage:'—',        nextIncrease:'—',          pctRent:'—',status:'active'},
+];
+const LEASES_FORMER=[
+  {loc:'FH 4',  name:'Maltiox',         sqft:270,  leaseStart:'2025-04-16',leaseEnd:'2030-08-15',psf:244.44,monthlyRent:5500,  storage:'Cold+Dry', nextIncrease:'2026-08-31',pctRent:'6% of GSR > $250,000',status:'vacated'},
+  {loc:'FH 8',  name:'Taco Cat',        sqft:1161, leaseStart:'2023-04-01',leaseEnd:'2035-07-13',psf:114.37,monthlyRent:11065.70,storage:'—',      nextIncrease:'2026-08-01',pctRent:'9% of GSR > $375,000',status:'vacated'},
+  {loc:'FH 16', name:'Tiger Sugar',     sqft:605,  leaseStart:'2024-02-12',leaseEnd:'2031-02-28',psf:138.92,monthlyRent:7004,  storage:'—',        nextIncrease:'2026-03-01',pctRent:'10% of GSR > $210,120',status:'vacated'},
+  {loc:'LL02',  name:'EXPAT',           sqft:8540, leaseStart:'2023-08-15',leaseEnd:'2033-08-31',psf:22.57, monthlyRent:16059.25,storage:'—',       nextIncrease:'2026-04-01',pctRent:'9% of GSR > $5,416,667',status:'vacated'},
+];
+
+// ── AR data ───────────────────────────────────────────────────────────────────
+const AR_WM=[
+  {loc:'FH 1', name:'Bandoola Bowl',       bal:64851.34,  cur:15298.18, d30:0,        d60:15298.18, d90:34254.98, late:3242.57,  gworld:'No',  lastPmt:'2026-04-23',notes:'Sent transfer 4/22'},
+  {loc:'FH 2', name:'Onkei',               bal:0,         cur:0,        d30:0,        d60:0,        d90:0,        late:0,        gworld:'Yes', lastPmt:'2026-04-23',notes:''},
+  {loc:'FH 3', name:"GiGi's Pasta",        bal:38728.98,  cur:7939.17,  d30:30789.81, d60:0,        d90:0,        late:1936.45,  gworld:'Pending',lastPmt:'2026-04-02',notes:''},
+  {loc:'FH 4', name:'Vacant (Maltiox)',     bal:0,         cur:0,        d30:0,        d60:0,        d90:0,        late:0,        gworld:'—',   lastPmt:'—',         notes:'LOI out for vacant space'},
+  {loc:'FH 5', name:"Mason's Lobster",      bal:20607.70,  cur:5304.85,  d30:0,        d60:6302.85,  d90:9000,     late:1030.39,  gworld:'Yes', lastPmt:'2026-05-07',notes:'Additional check $3,151 week of 5/4'},
+  {loc:'FH 6', name:'Roaming Rooster',      bal:0,         cur:-864.30,  d30:864.30,   d60:0,        d90:0,        late:0,        gworld:'No',  lastPmt:'2026-05-06',notes:''},
+  {loc:'FH 7', name:'Capo Deli',            bal:0,         cur:-742.69,  d30:742.69,   d60:0,        d90:0,        late:0,        gworld:'Yes', lastPmt:'2026-05-01',notes:''},
+  {loc:'FH 9', name:'Alitiko',              bal:160631.86, cur:16889.50, d30:0,        d60:17183.98, d90:126558.38,late:8031.59,  gworld:'No',  lastPmt:'2025-11-05',notes:'Working to backfill'},
+  {loc:'FH 10',name:'Falafel Inc.',         bal:0,         cur:0,        d30:0,        d60:0,        d90:0,        late:0,        gworld:'No',  lastPmt:'2026-04-09',notes:'New lease to be executed, backdated 2/1'},
+  {loc:'FH 11',name:'Arepa Zone',           bal:26189.91,  cur:16161.42, d30:817.65,   d60:9210.84,  d90:0,        late:1309.50,  gworld:'Yes', lastPmt:'2026-03-17',notes:'Scheduled payment — followed up 4/23'},
+  {loc:'FH 12',name:'Southblock',           bal:0,         cur:0,        d30:0,        d60:0,        d90:0,        late:0,        gworld:'—',   lastPmt:'2026-05-04',notes:''},
+  {loc:'FH 13',name:'Bullfrog Bagels',      bal:1887.75,   cur:0,        d30:1887.74,  d60:0.01,     d90:0,        late:94.39,    gworld:'Yes', lastPmt:'2026-05-04',notes:'% rent outstanding'},
+  {loc:'FH 14',name:"Andy's Pizza",         bal:17520.73,  cur:14023.43, d30:3497.30,  d60:0,        d90:0,        late:876.04,   gworld:'Yes', lastPmt:'2026-03-30',notes:''},
+  {loc:'FH 17',name:'Mondepice',            bal:0,         cur:0,        d30:0,        d60:0,        d90:0,        late:0,        gworld:'—',   lastPmt:'2026-04-02',notes:''},
+  {loc:'Pop-Up 3',name:'LitBox',            bal:0,         cur:0,        d30:0,        d60:0,        d90:0,        late:0,        gworld:'—',   lastPmt:'2026-05-06',notes:''},
+  {loc:'20402',name:'Captain Cookie',       bal:7242.36,   cur:6766.66,  d30:0,        d60:475.70,   d90:0,        late:362.12,   gworld:'Yes', lastPmt:'2026-05-05',notes:''},
+];
+const AR_PENN=[
+  {loc:'M10',   name:'Bindaas',             bal:95869.22,  cur:7409.58,  d30:39882.65, d60:-7299.90, d90:55876.89, late:4793.46,  gworld:'Yes', lastPmt:'2026-04-06',notes:'% rent amendment'},
+  {loc:'M015A', name:'Chipotle',            bal:576.31,    cur:0,        d30:0,        d60:0,        d90:576.31,   late:28.82,    gworld:'Yes', lastPmt:'2026-04-27',notes:'Received $17,437.49'},
+  {loc:'M003A', name:"Duke's Grocery",      bal:259348.39, cur:5462.61,  d30:46925.22, d60:0,        d90:206960.56,late:12967.42, gworld:'Yes', lastPmt:'2026-04-13',notes:'$18,000 payment'},
+  {loc:'M011',  name:'Maman',               bal:101347.61, cur:7576.25,  d30:15152.50, d60:0,        d90:78618.86, late:5067.38,  gworld:'Yes', lastPmt:'2026-05-01',notes:''},
+  {loc:'825',   name:'UPS (AANRB)',          bal:23000,     cur:11500,    d30:0,        d60:11000,    d90:500,      late:1150,     gworld:'—',   lastPmt:'—',         notes:''},
+  {loc:'950',   name:'CVS',                 bal:71946.78,  cur:75478.40, d30:0,        d60:0,        d90:-3531.62, late:3597.34,  gworld:'—',   lastPmt:'—',         notes:''},
+  {loc:'958',   name:'ProPhoto',            bal:16673.42,  cur:16673.42, d30:0,        d60:0,        d90:0,        late:833.67,   gworld:'—',   lastPmt:'—',         notes:''},
+  {loc:'20401', name:'Puglisi',             bal:3893.15,   cur:3154.59,  d30:0,        d60:738.56,   d90:0,        late:194.66,   gworld:'—',   lastPmt:'—',         notes:''},
+];
+const AR_TERMED=[
+  {loc:'LL02',  name:'EXPAT',               bal:429200.59, cur:66133.38, d30:0,        d60:65169.84, d90:297897.37,late:21460.03, termDate:'2026-01-01',notes:'Awaiting final termination agreement'},
+  {loc:'FH 16', name:'Tiger Sugar',         bal:46119.39,  cur:8628.24,  d30:0,        d60:15218.12, d90:22273.03, late:2305.97,  termDate:'2026-01-01',notes:'Security deposit applied. Possession returned.'},
+  {loc:'FH 8',  name:'Taco Cat',            bal:140272.92, cur:23677.40, d30:0,        d60:24207.40, d90:92388.12, late:7013.65,  termDate:'2026-01-01',notes:''},
+];
+
+// ── Render lease summary ──────────────────────────────────────────────────────
+function leaseThead(){
+  return `<thead><tr>
+    <th style="width:52px">Stall</th>
+    <th>Tenant</th>
+    <th class="r">Sq Ft</th>
+    <th class="r">Lease Start</th>
+    <th class="r">Lease End</th>
+    <th class="r">$/psf</th>
+    <th class="r">Monthly Rent</th>
+    <th>Storage</th>
+    <th>Next Increase</th>
+    <th>% Rent Structure</th>
+  </tr></thead>`;
+}
+
+function leaseRow(l){
+  const isVacant  = l.status==='vacant';
+  const isMtm     = l.status==='mtm';
+  const isExpiring= l.status==='expiring-2026';
+  const isVacated = l.status==='vacated';
+  const isPopup   = l.status==='popup';
+  const rowStyle  = isVacant||isVacated ? 'opacity:.5' : '';
+
+  let statusBadge = '';
+  if(isVacant)   statusBadge = '<span class="badge b-vac">vacant</span>';
+  else if(isVacated) statusBadge = '<span class="badge b-vac" style="opacity:.7">vacated</span>';
+  else if(isMtm) statusBadge = '<span class="badge" style="background:rgba(192,57,43,.12);color:#e07060;border:.5px solid rgba(192,57,43,.3)">month-to-month</span>';
+  else if(isExpiring) statusBadge = '<span class="badge" style="background:rgba(230,149,10,.12);color:#e6950a;border:.5px solid rgba(230,149,10,.3)">⚠ expires 2026</span>';
+  else if(isPopup) statusBadge = '<span class="badge b-pop">pop-up</span>';
+
+  const endStyle = isExpiring ? 'style="color:#e6950a;font-weight:600"' : '';
+
+  return `<tr style="${rowStyle}">
+    <td style="font-size:10px;color:var(--muted)">${l.loc}</td>
+    <td>${l.name} ${statusBadge}</td>
+    <td class="r">${fmtSqft(l.sqft)}</td>
+    <td class="r" style="font-size:10px;color:var(--muted)">${fmtDate(l.leaseStart)}</td>
+    <td class="r" ${endStyle}>${fmtDate(l.leaseEnd)}</td>
+    <td class="r">${l.psf?'$'+l.psf.toFixed(2):'—'}</td>
+    <td class="r">${fmtMoney(l.monthlyRent)}</td>
+    <td style="font-size:10px;color:var(--muted)">${l.storage}</td>
+    <td style="font-size:10px;color:var(--muted)">${fmtDate(l.nextIncrease)}</td>
+    <td style="font-size:10px;color:var(--muted);max-width:180px;white-space:normal">${l.pctRent}</td>
+  </tr>`;
+}
+
+function renderLeaseTable(data, tblId){
+  document.getElementById(tblId).innerHTML = leaseThead()+'<tbody>'+data.map(leaseRow).join('')+'</tbody>';
+}
+
+function renderLeaseSummary(){
+  renderLeaseTable(LEASES_WM,     'lease-wm-table');
+  renderLeaseTable(LEASES_PENN,   'lease-penn-table');
+  renderLeaseTable(LEASES_RETAIL, 'lease-retail-table');
+  renderLeaseTable(LEASES_FORMER, 'lease-former-table');
+
+  // Summary metrics
+  const active = [...LEASES_WM,...LEASES_PENN,...LEASES_RETAIL].filter(l=>l.status==='active'||l.status==='mtm');
+  const totalSqft = [...LEASES_WM,...LEASES_PENN].filter(l=>l.sqft&&(l.status==='active'||l.status==='mtm')).reduce((s,l)=>s+l.sqft,0);
+  const totalRent = active.filter(l=>l.monthlyRent).reduce((s,l)=>s+l.monthlyRent,0);
+  const expiring  = [...LEASES_WM,...LEASES_PENN].filter(l=>l.status==='expiring-2026').length;
+  document.getElementById('ls-sqft-total').textContent   = totalSqft.toLocaleString()+' sf';
+  document.getElementById('ls-active-count').textContent = active.length;
+  document.getElementById('ls-expiring-count').textContent = expiring;
+  document.getElementById('ls-rent-total').textContent   = '$'+Math.round(totalRent).toLocaleString();
+}
+
+// ── Render AR aging ───────────────────────────────────────────────────────────
+function arThead(showTerm){
+  return `<thead><tr>
+    <th style="width:52px">Stall</th>
+    <th>Tenant</th>
+    <th class="r">Balance</th>
+    <th class="r" style="color:var(--green)">Current</th>
+    <th class="r" style="color:#e6950a">30 Days</th>
+    <th class="r" style="color:var(--red)">60 Days</th>
+    <th class="r" style="color:#c0392b">90+ Days</th>
+    <th class="r" style="color:var(--muted)">Late Fee</th>
+    <th style="color:var(--muted)">GWorld</th>
+    <th style="color:var(--muted)">${showTerm?'Term Date':'Last Pmt'}</th>
+    <th>Notes</th>
+  </tr></thead>`;
+}
+
+function arCell(v){
+  if(v===null||v===undefined||v==='') return '<span style="color:var(--muted)">—</span>';
+  const n=Number(v); if(isNaN(n)||n===0) return '<span style="color:var(--muted)">—</span>';
+  if(n<0) return `<span style="color:var(--green);font-size:10px">(${fmtMoney(Math.abs(n))})</span>`;
+  return fmtMoney(n);
+}
+
+function arRow(r, showTerm){
+  const isHigh = r.d90 > 10000;
+  const balStyle = r.bal > 0 ? (isHigh?'color:var(--red);font-weight:600':'color:var(--gold);font-weight:600') : 'color:var(--muted)';
+  const gwStyle  = r.gworld==='Yes'?'color:var(--green)':r.gworld==='No'?'color:var(--red)':'color:var(--muted)';
+  const dateStr  = showTerm ? fmtDate(r.termDate) : fmtDate(r.lastPmt);
+  return `<tr>
+    <td style="font-size:10px;color:var(--muted)">${r.loc}</td>
+    <td>${r.name}</td>
+    <td class="r" style="${balStyle}">${r.bal>0?fmtMoney(r.bal):'<span style="color:var(--green)">Current</span>'}</td>
+    <td class="r" style="font-size:10px">${arCell(r.cur)}</td>
+    <td class="r" style="font-size:10px">${arCell(r.d30)}</td>
+    <td class="r" style="font-size:10px">${arCell(r.d60)}</td>
+    <td class="r" style="font-size:10px;${r.d90>10000?'color:var(--red);font-weight:600':''}">${arCell(r.d90)}</td>
+    <td class="r" style="font-size:10px;color:var(--muted)">${arCell(r.late)}</td>
+    <td style="font-size:10px;${gwStyle}">${r.gworld}</td>
+    <td style="font-size:10px;color:var(--muted)">${dateStr}</td>
+    <td style="font-size:10px;color:var(--muted);max-width:160px;white-space:normal">${r.notes}</td>
+  </tr>`;
+}
+
+function renderAR(){
+  document.getElementById('ar-wm-table').innerHTML    = arThead(false)+'<tbody>'+AR_WM.map(r=>arRow(r,false)).join('')+'</tbody>';
+  document.getElementById('ar-penn-table').innerHTML  = arThead(false)+'<tbody>'+AR_PENN.map(r=>arRow(r,false)).join('')+'</tbody>';
+  document.getElementById('ar-termed-table').innerHTML= arThead(true) +'<tbody>'+AR_TERMED.map(r=>arRow(r,true)).join('')+'</tbody>';
+
+  // 90+ days total across all active
+  const all90 = [...AR_WM,...AR_PENN].reduce((s,r)=>s+(r.d90>0?r.d90:0),0);
+  document.getElementById('ar-90plus').textContent = '$'+Math.round(all90).toLocaleString();
+}
+renderOvMom();
+renderSales();
+renderTraffic();
+renderWeb();
+renderAllEvents();
+renderMonthCal();
+renderLeaseSummary();
+renderAR();
+renderRent();
+fetchWeather();
+// Fetch 2026 live data after initial render (non-blocking)
+fetch2026Sales();
+fetchQtrly2026();
+</script>
+</body>
+</html>
